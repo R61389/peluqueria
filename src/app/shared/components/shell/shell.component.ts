@@ -14,9 +14,9 @@ import { NavbarComponent } from '../navbar/navbar.component';
   `,
   styles: [`
     .shell-main {
-      padding-top: 64px;
+      padding-top: 80px;
       min-height: 100vh;
-      background: var(--bg-primary, #0a0a0f);
+      background: #080810;
     }
   `]
 })

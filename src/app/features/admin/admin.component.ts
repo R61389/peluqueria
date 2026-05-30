@@ -20,65 +20,146 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
     <div class="page">
       <div class="container">
         <div class="page-header">
-          <h1>Panel de Administración</h1>
-          <p>Gestiona todo el sistema</p>
+          <div class="header-label">Panel de Control</div>
+          <h1>Administración</h1>
+          <p>Gestiona todo el sistema BarberAI</p>
         </div>
 
         <!-- Tabs -->
         <div class="tabs-bar">
           @for (t of tabs; track t.id) {
             <button class="tab-btn" [class.active]="activeTab() === t.id" (click)="activeTab.set(t.id)">
-              <span>{{ t.icon }}</span> {{ t.label }}
+              <span class="tab-icon" [innerHTML]="t.icon"></span> {{ t.label }}
             </button>
           }
         </div>
 
         <!-- DASHBOARD TAB -->
         @if (activeTab() === 'dashboard') {
-          <div class="stats-grid">
-            <div class="stat-card gold">
-              <div class="stat-icon">📅</div>
+
+          <!-- Bento stats grid -->
+          <div class="bento-grid">
+            <!-- Appointments card — large, gold glow -->
+            <div class="stat-card stat-gold">
+              <div class="stat-bg-deco">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" opacity="0.08">
+                  <circle cx="60" cy="60" r="55" stroke="#c9a96e" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="40" stroke="#c9a96e" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="25" stroke="#c9a96e" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="stat-header">
+                <div class="stat-icon-wrap gold">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="#c9a96e" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="6" stroke="#c9a96e" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="6" stroke="#c9a96e" stroke-width="1.5"/><line x1="3" y1="10" x2="21" y2="10" stroke="#c9a96e" stroke-width="1.5"/></svg>
+                </div>
+                <div class="stat-trend">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 17l5-5 5 5M7 11l5-5 5 5" stroke="#10b981" stroke-width="2"/></svg>
+                  <span>Hoy</span>
+                </div>
+              </div>
               <div class="stat-num">{{ todayAppointments().length }}</div>
               <div class="stat-label">Citas hoy</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">💰</div>
+
+            <!-- Revenue card — purple tint -->
+            <div class="stat-card stat-purple">
+              <div class="stat-bg-deco">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" opacity="0.08">
+                  <circle cx="60" cy="60" r="55" stroke="#a78bfa" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="35" stroke="#a78bfa" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="stat-header">
+                <div class="stat-icon-wrap purple">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><line x1="12" y1="1" x2="12" y2="23" stroke="#a78bfa" stroke-width="1.5"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="#a78bfa" stroke-width="1.5"/></svg>
+                </div>
+                <div class="stat-trend">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 17l5-5 5 5M7 11l5-5 5 5" stroke="#10b981" stroke-width="2"/></svg>
+                  <span>Hoy</span>
+                </div>
+              </div>
               <div class="stat-num">\${{ todayRevenue() }}</div>
               <div class="stat-label">Ingresos hoy</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">✂</div>
+
+            <!-- Barbers card — green tint -->
+            <div class="stat-card stat-green">
+              <div class="stat-bg-deco">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" opacity="0.08">
+                  <circle cx="60" cy="60" r="55" stroke="#10b981" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="35" stroke="#10b981" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="stat-header">
+                <div class="stat-icon-wrap green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 2 L6 22 M6 9 Q10 6 14 9 Q18 6 18 2" stroke="#10b981" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </div>
+                <div class="stat-trend">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 17l5-5 5 5M7 11l5-5 5 5" stroke="#10b981" stroke-width="2"/></svg>
+                  <span>Activos</span>
+                </div>
+              </div>
               <div class="stat-num">{{ activeBarbers() }}</div>
               <div class="stat-label">Barberos activos</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">👥</div>
+
+            <!-- Clients card — blue tint -->
+            <div class="stat-card stat-blue">
+              <div class="stat-bg-deco">
+                <svg width="120" height="120" viewBox="0 0 120 120" fill="none" opacity="0.08">
+                  <circle cx="60" cy="60" r="55" stroke="#60a5fa" stroke-width="1"/>
+                  <circle cx="60" cy="60" r="35" stroke="#60a5fa" stroke-width="1"/>
+                </svg>
+              </div>
+              <div class="stat-header">
+                <div class="stat-icon-wrap blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="#60a5fa" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke="#60a5fa" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="#60a5fa" stroke-width="1.5"/><path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="#60a5fa" stroke-width="1.5"/></svg>
+                </div>
+                <div class="stat-trend">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M7 17l5-5 5 5M7 11l5-5 5 5" stroke="#10b981" stroke-width="2"/></svg>
+                  <span>Total</span>
+                </div>
+              </div>
               <div class="stat-num">{{ totalClients() }}</div>
               <div class="stat-label">Clientes</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">⏳</div>
-              <div class="stat-num pending">{{ pendingCount() }}</div>
+
+            <!-- Pending + Completed — smaller -->
+            <div class="stat-card stat-amber stat-sm">
+              <div class="stat-header">
+                <div class="stat-icon-wrap amber">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#f59e0b" stroke-width="1.5"/><line x1="12" y1="6" x2="12" y2="12" stroke="#f59e0b" stroke-width="1.5"/><line x1="12" y1="16" x2="12.01" y2="16" stroke="#f59e0b" stroke-width="1.5"/></svg>
+                </div>
+              </div>
+              <div class="stat-num amber-text">{{ pendingCount() }}</div>
               <div class="stat-label">Pendientes</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-icon">✅</div>
-              <div class="stat-num completed">{{ completedCount() }}</div>
+
+            <div class="stat-card stat-emerald stat-sm">
+              <div class="stat-header">
+                <div class="stat-icon-wrap emerald">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke="#10b981" stroke-width="1.5"/><polyline points="22,4 12,14.01 9,11.01" stroke="#10b981" stroke-width="1.5"/></svg>
+                </div>
+              </div>
+              <div class="stat-num emerald-text">{{ completedCount() }}</div>
               <div class="stat-label">Completadas</div>
             </div>
           </div>
 
           <div class="recent-section">
-            <h2>Citas recientes</h2>
+            <div class="recent-header">
+              <h2>Citas recientes</h2>
+              <div class="header-line"></div>
+            </div>
             <div class="appts-list">
               @for (appt of recentAppointments(); track appt.id) {
                 <div class="appt-row">
-                  <span class="gold">{{ appt.time }}</span>
+                  <span class="gold-text">{{ appt.time }}</span>
                   <span>{{ appt.userName }}</span>
                   <span>{{ appt.barberName }}</span>
                   <span>{{ appt.serviceName }}</span>
                   <span><span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span></span>
-                  <span class="gold">\${{ appt.price }}</span>
+                  <span class="gold-text">\${{ appt.price }}</span>
                 </div>
               }
             </div>
@@ -105,12 +186,12 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
               @for (appt of filteredAppts(); track appt.id) {
                 <div class="table-row appt-cols">
                   <span>{{ appt.date }}</span>
-                  <span class="gold">{{ appt.time }}</span>
+                  <span class="gold-text">{{ appt.time }}</span>
                   <span>{{ appt.userName }}</span>
                   <span>{{ appt.barberName }}</span>
                   <span>{{ appt.serviceName }}</span>
                   <span><span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span></span>
-                  <span class="gold">\${{ appt.price }}</span>
+                  <span class="gold-text">\${{ appt.price }}</span>
                   <span>
                     <select class="mini-select" [value]="appt.status" (change)="changeApptStatus(appt.id, $any($event.target).value)">
                       <option value="pending">Pendiente</option>
@@ -130,7 +211,10 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
           <div class="section">
             <div class="section-header">
               <h2>Barberos</h2>
-              <button class="btn-gold" (click)="openBarberForm()">+ Nuevo barbero</button>
+              <button class="btn-gold-sm" (click)="openBarberForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+                Nuevo barbero
+              </button>
             </div>
 
             @if (showBarberForm()) {
@@ -163,8 +247,8 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                   </div>
                 </div>
                 <div class="form-actions">
-                  <button class="btn-outline" (click)="showBarberForm.set(false)">Cancelar</button>
-                  <button class="btn-gold" (click)="saveBarber()">Guardar</button>
+                  <button class="btn-outline-sm" (click)="showBarberForm.set(false)">Cancelar</button>
+                  <button class="btn-gold-sm" (click)="saveBarber()">Guardar</button>
                 </div>
               </div>
             }
@@ -185,9 +269,15 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                     </span>
                   </span>
                   <span class="row-actions">
-                    <button class="action-icon edit" (click)="editBarber(barber)">✏</button>
-                    <button class="action-icon toggle" (click)="toggleBarber(barber)">{{ barber.active ? '⏸' : '▶' }}</button>
-                    <button class="action-icon del" (click)="deleteBarber(barber.id)">🗑</button>
+                    <button class="action-icon" (click)="editBarber(barber)" title="Editar">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="1.5"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
+                    <button class="action-icon" (click)="toggleBarber(barber)" title="Toggle">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="15" x2="10" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="14" y1="15" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
+                    <button class="action-icon action-del" (click)="deleteBarber(barber.id)" title="Eliminar">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="1.5"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
                   </span>
                 </div>
               }
@@ -200,7 +290,10 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
           <div class="section">
             <div class="section-header">
               <h2>Servicios</h2>
-              <button class="btn-gold" (click)="openServiceForm()">+ Nuevo servicio</button>
+              <button class="btn-gold-sm" (click)="openServiceForm()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2"/><line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2"/></svg>
+                Nuevo servicio
+              </button>
             </div>
 
             @if (showServiceForm()) {
@@ -235,8 +328,8 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                   </div>
                 </div>
                 <div class="form-actions">
-                  <button class="btn-outline" (click)="showServiceForm.set(false)">Cancelar</button>
-                  <button class="btn-gold" (click)="saveService()">Guardar</button>
+                  <button class="btn-outline-sm" (click)="showServiceForm.set(false)">Cancelar</button>
+                  <button class="btn-gold-sm" (click)="saveService()">Guardar</button>
                 </div>
               </div>
             }
@@ -250,7 +343,7 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                   <span>{{ svc.name }}</span>
                   <span class="muted">{{ svc.description }}</span>
                   <span>{{ svc.duration }} min</span>
-                  <span class="gold">\${{ svc.price }}</span>
+                  <span class="gold-text">\${{ svc.price }}</span>
                   <span><span class="category-tag">{{ svc.category }}</span></span>
                   <span>
                     <span class="status-badge" [class.status-confirmed]="svc.active" [class.status-cancelled]="!svc.active">
@@ -258,9 +351,15 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                     </span>
                   </span>
                   <span class="row-actions">
-                    <button class="action-icon edit" (click)="editService(svc)">✏</button>
-                    <button class="action-icon toggle" (click)="toggleService(svc)">{{ svc.active ? '⏸' : '▶' }}</button>
-                    <button class="action-icon del" (click)="deleteService(svc.id)">🗑</button>
+                    <button class="action-icon" (click)="editService(svc)" title="Editar">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" stroke-width="1.5"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
+                    <button class="action-icon" (click)="toggleService(svc)" title="Toggle">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="15" x2="10" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="14" y1="15" x2="14" y2="9" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
+                    <button class="action-icon action-del" (click)="deleteService(svc.id)" title="Eliminar">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="1.5"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.5"/></svg>
+                    </button>
                   </span>
                 </div>
               }
@@ -271,7 +370,9 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
         <!-- USERS TAB -->
         @if (activeTab() === 'users') {
           <div class="section">
-            <h2>Usuarios</h2>
+            <div class="section-header">
+              <h2>Usuarios</h2>
+            </div>
             <div class="data-table">
               <div class="table-header user-cols">
                 <span>Nombre</span><span>Email</span><span>Rol</span><span>Creado</span><span>Acciones</span>
@@ -284,7 +385,9 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                   <span class="muted">{{ user.createdAt | date:'dd/MM/yy' }}</span>
                   <span>
                     @if (user.id !== currentUserId()) {
-                      <button class="action-icon del" (click)="deleteUser(user.id)">🗑</button>
+                      <button class="action-icon action-del" (click)="deleteUser(user.id)" title="Eliminar">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><polyline points="3,6 5,6 21,6" stroke="currentColor" stroke-width="1.5"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="currentColor" stroke-width="1.5"/></svg>
+                      </button>
                     }
                   </span>
                 </div>
@@ -296,16 +399,36 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
     </div>
   `,
   styles: [`
-    .page { min-height: 100vh; background: #0a0a0f; padding: 32px 0; }
+    .page { min-height: 100vh; background: #080810; padding: 32px 0; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .page-header { margin-bottom: 28px; }
-    .page-header h1 { font-family: 'Playfair Display', serif; color: #f0eff4; font-size: 28px; margin: 0 0 6px; }
+
+    .page-header { margin-bottom: 32px; }
+    .header-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #c9a96e;
+      margin-bottom: 8px;
+    }
+    .page-header h1 {
+      font-family: 'Playfair Display', serif;
+      color: #f0eff4;
+      font-size: 32px;
+      margin: 0 0 6px;
+      background: linear-gradient(135deg, #f0eff4 0%, #9997b0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
     .page-header p { color: #9997b0; margin: 0; }
+
     .tabs-bar {
       display: flex;
       gap: 4px;
       margin-bottom: 32px;
-      background: rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
       padding: 4px;
       border-radius: 14px;
       overflow-x: auto;
@@ -326,39 +449,139 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
       transition: all 0.2s;
     }
     .tab-btn:hover { color: #f0eff4; background: rgba(255,255,255,0.05); }
-    .tab-btn.active { background: rgba(201,169,110,0.15); color: #c9a96e; }
+    .tab-btn.active { background: rgba(201,169,110,0.12); color: #c9a96e; border: 1px solid rgba(201,169,110,0.2); }
+    .tab-icon { font-size: 14px; }
 
-    .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 40px; }
-    .stat-card {
-      background: #1a1a26;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+    /* Bento grid */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: auto auto;
+      gap: 16px;
+      margin-bottom: 40px;
     }
-    .stat-card.gold { border-color: rgba(201,169,110,0.3); }
-    .stat-icon { font-size: 24px; }
-    .stat-num { font-size: 32px; font-weight: 700; color: #f0eff4; }
-    .stat-num.pending { color: #f59e0b; }
-    .stat-num.completed { color: #10b981; }
+    .stat-card {
+      position: relative;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 24px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .stat-card.stat-sm {
+      padding: 20px;
+    }
+    .stat-gold {
+      border-color: rgba(201,169,110,0.15);
+      background: linear-gradient(135deg, rgba(201,169,110,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-gold:hover { border-color: rgba(201,169,110,0.3); box-shadow: 0 8px 32px rgba(201,169,110,0.1); }
+    .stat-purple {
+      border-color: rgba(167,139,250,0.12);
+      background: linear-gradient(135deg, rgba(167,139,250,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-purple:hover { border-color: rgba(167,139,250,0.25); box-shadow: 0 8px 32px rgba(167,139,250,0.08); }
+    .stat-green {
+      border-color: rgba(16,185,129,0.12);
+      background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-green:hover { border-color: rgba(16,185,129,0.25); box-shadow: 0 8px 32px rgba(16,185,129,0.08); }
+    .stat-blue {
+      border-color: rgba(96,165,250,0.12);
+      background: linear-gradient(135deg, rgba(96,165,250,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-blue:hover { border-color: rgba(96,165,250,0.25); box-shadow: 0 8px 32px rgba(96,165,250,0.08); }
+    .stat-amber {
+      border-color: rgba(245,158,11,0.12);
+      background: linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-amber:hover { border-color: rgba(245,158,11,0.25); }
+    .stat-emerald {
+      border-color: rgba(16,185,129,0.12);
+      background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    }
+    .stat-emerald:hover { border-color: rgba(16,185,129,0.25); }
+
+    .stat-bg-deco {
+      position: absolute;
+      right: -10px;
+      bottom: -10px;
+      pointer-events: none;
+    }
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .stat-icon-wrap {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stat-icon-wrap.gold { background: rgba(201,169,110,0.12); border: 1px solid rgba(201,169,110,0.2); }
+    .stat-icon-wrap.purple { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
+    .stat-icon-wrap.green { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+    .stat-icon-wrap.blue { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.2); }
+    .stat-icon-wrap.amber { background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2); }
+    .stat-icon-wrap.emerald { background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2); }
+
+    .stat-trend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #10b981;
+      background: rgba(16,185,129,0.1);
+      padding: 3px 8px;
+      border-radius: 100px;
+    }
+    .stat-num {
+      font-size: 36px;
+      font-weight: 700;
+      color: #f0eff4;
+      font-family: 'Playfair Display', serif;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-card.stat-sm .stat-num { font-size: 28px; }
+    .amber-text { color: #f59e0b; }
+    .emerald-text { color: #10b981; }
     .stat-label { color: #9997b0; font-size: 13px; }
 
-    .recent-section h2 { font-family: 'Playfair Display', serif; color: #f0eff4; font-size: 18px; margin: 0 0 14px; }
+    /* Recent section */
+    .recent-section { margin-bottom: 32px; }
+    .recent-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .recent-header h2 { font-family: 'Playfair Display', serif; color: #f0eff4; font-size: 20px; margin: 0; white-space: nowrap; }
+    .header-line { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
     .appts-list { display: flex; flex-direction: column; gap: 8px; }
     .appt-row {
       display: grid;
       grid-template-columns: 60px 1fr 1fr 1fr 130px 60px;
       gap: 12px;
-      background: #1a1a26;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
       padding: 12px 16px;
       font-size: 13px;
       color: #f0eff4;
       align-items: center;
+      transition: border-color 0.2s;
     }
+    .appt-row:hover { border-color: rgba(255,255,255,0.1); }
+
+    .gold-text { color: #c9a96e; font-weight: 600; }
 
     .section { margin-bottom: 32px; }
     .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -366,17 +589,25 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
 
     .filters { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
     .filter-input, .filter-select {
-      background: #1a1a26;
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
       color: #f0eff4;
       padding: 9px 14px;
       border-radius: 10px;
       font-size: 13px;
       outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Inter', sans-serif;
     }
+    .filter-input:focus, .filter-select:focus { border-color: rgba(201,169,110,0.3); }
     .filter-input { min-width: 240px; }
 
-    .data-table { background: #1a1a26; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden; }
+    .data-table {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      overflow: hidden;
+    }
     .table-header, .table-row {
       display: grid;
       gap: 12px;
@@ -389,117 +620,138 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
     .service-cols { grid-template-columns: 1fr 1fr 90px 70px 100px 90px 100px; }
     .user-cols { grid-template-columns: 1fr 1fr 100px 100px 60px; }
     .table-header {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255,255,255,0.02);
       color: #9997b0;
       font-weight: 600;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .table-row { color: #f0eff4; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .table-row { color: #f0eff4; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
     .table-row:last-child { border-bottom: none; }
-    .gold { color: #c9a96e; font-weight: 600; }
+    .table-row:hover { background: rgba(255,255,255,0.02); }
     .muted { color: #9997b0; }
 
     .status-badge {
       padding: 4px 10px;
-      border-radius: 8px;
+      border-radius: 100px;
       font-size: 11px;
       font-weight: 600;
       white-space: nowrap;
     }
-    .status-pending { background: rgba(245,158,11,0.15); color: #f59e0b; }
-    .status-confirmed { background: rgba(16,185,129,0.15); color: #10b981; }
-    .status-completed { background: rgba(99,102,241,0.15); color: #818cf8; }
-    .status-cancelled { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .status-pending { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+    .status-confirmed { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+    .status-completed { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
+    .status-cancelled { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
 
     .role-badge {
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 3px 10px;
+      border-radius: 100px;
       font-size: 11px;
       font-weight: 600;
     }
-    .role-badge.role-admin { background: rgba(201,169,110,0.2); color: #c9a96e; }
-    .role-badge.role-barber { background: rgba(16,185,129,0.15); color: #10b981; }
-    .role-badge.role-user { background: rgba(99,102,241,0.15); color: #818cf8; }
+    .role-badge.role-admin { background: rgba(201,169,110,0.12); color: #c9a96e; border: 1px solid rgba(201,169,110,0.2); }
+    .role-badge.role-barber { background: rgba(16,185,129,0.12); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+    .role-badge.role-user { background: rgba(139,92,246,0.12); color: #a78bfa; border: 1px solid rgba(139,92,246,0.2); }
 
     .category-tag {
-      background: rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.05);
       color: #9997b0;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 3px 10px;
+      border-radius: 100px;
       font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
     .row-actions { display: flex; gap: 6px; }
     .action-icon {
       width: 28px; height: 28px;
-      border: none;
-      border-radius: 7px;
-      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.03);
       cursor: pointer;
-      font-size: 13px;
-      transition: background 0.2s;
+      color: #9997b0;
+      transition: all 0.2s;
       display: flex; align-items: center; justify-content: center;
     }
-    .action-icon:hover { background: rgba(255,255,255,0.12); }
-    .action-icon.del:hover { background: rgba(239,68,68,0.15); }
+    .action-icon:hover { background: rgba(255,255,255,0.08); color: #f0eff4; border-color: rgba(255,255,255,0.15); }
+    .action-icon.action-del:hover { background: rgba(239,68,68,0.1); color: #f87171; border-color: rgba(239,68,68,0.2); }
     .mini-select {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       color: #f0eff4;
       padding: 4px 8px;
       border-radius: 7px;
       font-size: 11px;
+      font-family: 'Inter', sans-serif;
     }
 
     .form-card {
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(201,169,110,0.2);
-      border-radius: 16px;
+      background: rgba(201,169,110,0.03);
+      border: 1px solid rgba(201,169,110,0.15);
+      border-radius: 18px;
       padding: 24px;
       margin-bottom: 20px;
     }
-    .form-card h3 { color: #c9a96e; font-size: 16px; margin: 0 0 20px; }
-    .form-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-    .field label { display: block; color: #9997b0; font-size: 12px; margin-bottom: 6px; font-weight: 600; }
+    .form-card h3 { color: #c9a96e; font-family: 'Playfair Display', serif; font-size: 16px; margin: 0 0 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { display: block; color: #9997b0; font-size: 12px; margin-bottom: 0; font-weight: 500; }
     .field input, .field select {
       width: 100%;
       padding: 10px 14px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 10px;
       color: #f0eff4;
       font-size: 13px;
+      font-family: 'Inter', sans-serif;
       box-sizing: border-box;
+      outline: none;
+      transition: border-color 0.2s;
     }
+    .field input:focus, .field select:focus { border-color: rgba(201,169,110,0.4); }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-    .btn-gold {
-      padding: 10px 24px;
+
+    .btn-gold-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 18px;
       background: linear-gradient(135deg, #c9a96e, #a07840);
-      color: #0a0a0f;
+      color: #080810;
       border: none;
       border-radius: 10px;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
     }
-    .btn-gold:hover { opacity: 0.9; }
-    .btn-outline {
-      padding: 10px 20px;
+    .btn-gold-sm:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201,169,110,0.3); }
+
+    .btn-outline-sm {
+      padding: 9px 18px;
       background: transparent;
       color: #9997b0;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.1);
       border-radius: 10px;
       font-size: 13px;
       cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-outline-sm:hover { color: #f0eff4; border-color: rgba(255,255,255,0.2); }
+
+    @media (max-width: 900px) {
+      .bento-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .bento-grid { grid-template-columns: repeat(2, 1fr); }
       .form-grid { grid-template-columns: 1fr; }
       .tabs-bar { gap: 2px; }
+    }
+    @media (max-width: 480px) {
+      .bento-grid { grid-template-columns: 1fr; }
     }
   `]
 })
@@ -511,11 +763,11 @@ export class AdminComponent {
 
   activeTab = signal<Tab>('dashboard');
   tabs = [
-    { id: 'dashboard' as Tab, icon: '📊', label: 'Dashboard' },
-    { id: 'appointments' as Tab, icon: '📅', label: 'Citas' },
-    { id: 'barbers' as Tab, icon: '✂', label: 'Barberos' },
-    { id: 'services' as Tab, icon: '💈', label: 'Servicios' },
-    { id: 'users' as Tab, icon: '👥', label: 'Usuarios' }
+    { id: 'dashboard' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" rx="1"/><rect x="14" y="3" width="7" height="7" stroke="currentColor" stroke-width="1.5" rx="1"/><rect x="14" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" rx="1"/><rect x="3" y="14" width="7" height="7" stroke="currentColor" stroke-width="1.5" rx="1"/></svg>', label: 'Dashboard' },
+    { id: 'appointments' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Citas' },
+    { id: 'barbers' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 2 L6 22 M6 9 Q10 6 14 9 Q18 6 18 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>', label: 'Barberos' },
+    { id: 'services' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Servicios' },
+    { id: 'users' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Usuarios' }
   ];
 
   apptSearch = '';
