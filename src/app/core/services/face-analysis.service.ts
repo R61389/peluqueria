@@ -17,11 +17,10 @@ export class FaceAnalysisService {
     if (this.modelsLoaded) return;
     const faceapi = await import('face-api.js');
     this.faceapi = faceapi;
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+    const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
       faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
       faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
     ]);
