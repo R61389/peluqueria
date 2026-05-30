@@ -8,29 +8,33 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
   },
   {
-    path: 'advisor',
+    path: '',
+    loadComponent: () => import('./shared/components/shell/shell.component').then(m => m.ShellComponent),
     canActivate: [authGuard],
-    loadComponent: () => import('./features/image-advisor/image-advisor.component').then(m => m.ImageAdvisorComponent)
-  },
-  {
-    path: 'appointments',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/appointments/appointments.component').then(m => m.AppointmentsComponent)
-  },
-  {
-    path: 'barber',
-    canActivate: [authGuard, barberGuard],
-    loadComponent: () => import('./features/barber-dashboard/barber-dashboard.component').then(m => m.BarberDashboardComponent)
-  },
-  {
-    path: 'admin',
-    canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
-  },
-  {
-    path: 'history',
-    canActivate: [authGuard],
-    loadComponent: () => import('./features/history/history.component').then(m => m.HistoryComponent)
+    children: [
+      {
+        path: 'advisor',
+        loadComponent: () => import('./features/image-advisor/image-advisor.component').then(m => m.ImageAdvisorComponent)
+      },
+      {
+        path: 'appointments',
+        loadComponent: () => import('./features/appointments/appointments.component').then(m => m.AppointmentsComponent)
+      },
+      {
+        path: 'barber',
+        canActivate: [barberGuard],
+        loadComponent: () => import('./features/barber-dashboard/barber-dashboard.component').then(m => m.BarberDashboardComponent)
+      },
+      {
+        path: 'admin',
+        canActivate: [adminGuard],
+        loadComponent: () => import('./features/admin/admin.component').then(m => m.AdminComponent)
+      },
+      {
+        path: 'history',
+        loadComponent: () => import('./features/history/history.component').then(m => m.HistoryComponent)
+      },
+    ]
   },
   { path: '**', redirectTo: '/login' }
 ];
