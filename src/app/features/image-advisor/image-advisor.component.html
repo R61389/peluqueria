@@ -1,0 +1,203 @@
+<div class="advisor-page">
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="brand-icon">✦</span>
+      <span class="brand-name font-display">Peluqueria AI</span>
+    </div>
+    <div class="nav-links">
+      <a routerLink="/history" class="nav-link">History</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero" [class.hidden]="currentStep() !== 'upload'">
+    <div class="hero-content">
+      <div class="hero-badge">Premium AI Advisory</div>
+      <h1 class="hero-title font-display">
+        Discover Your
+        <span class="gradient-text">Perfect Style</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload your photo for an AI-powered analysis of your face shape, color season,
+        ideal hairstyles, and personal style recommendations.
+      </p>
+    </div>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="step-indicator">
+    <div class="step" [class.active]="currentStep() === 'upload'" [class.done]="currentStep() !== 'upload'">
+      <div class="step-dot">
+        @if (currentStep() !== 'upload') {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        } @else {
+          1
+        }
+      </div>
+      <span class="step-label">Upload</span>
+    </div>
+    <div class="step-line" [class.done]="currentStep() !== 'upload'"></div>
+    <div class="step" [class.active]="currentStep() === 'analyze'" [class.done]="currentStep() === 'results'">
+      <div class="step-dot">
+        @if (currentStep() === 'results') {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        } @else {
+          2
+        }
+      </div>
+      <span class="step-label">Analyze</span>
+    </div>
+    <div class="step-line" [class.done]="currentStep() === 'results'"></div>
+    <div class="step" [class.active]="currentStep() === 'results'">
+      <div class="step-dot">3</div>
+      <span class="step-label">Results</span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Upload Step -->
+    @if (currentStep() === 'upload') {
+      <div class="upload-section fade-in-up">
+        @if (!showCamera()) {
+          <div class="upload-card">
+            <app-photo-upload
+              (analyzeClick)="analyzePhoto($event)"
+              (cameraClick)="showCamera.set(true)"
+            />
+          </div>
+        } @else {
+          <div class="camera-card">
+            <app-camera-capture
+              (photoCaptured)="onCameraCapture($event)"
+              (closed)="showCamera.set(false)"
+            />
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <div class="error-banner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Tips -->
+        <div class="tips-grid">
+          <div class="tip-card">
+            <span class="tip-icon">💡</span>
+            <span>Good lighting enhances accuracy</span>
+          </div>
+          <div class="tip-card">
+            <span class="tip-icon">📐</span>
+            <span>Face the camera straight on</span>
+          </div>
+          <div class="tip-card">
+            <span class="tip-icon">🎯</span>
+            <span>Clear, unobstructed face view</span>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Analyzing Step -->
+    @if (currentStep() === 'analyze') {
+      <div class="analyzing-section fade-in-up">
+        <div class="analyzing-card">
+          <div class="analyzing-animation">
+            <div class="scan-ring ring-1"></div>
+            <div class="scan-ring ring-2"></div>
+            <div class="scan-ring ring-3"></div>
+            <div class="scan-icon">✦</div>
+          </div>
+          <h2 class="analyzing-title font-display">Analyzing Your Photo</h2>
+          <p class="analyzing-desc">Our AI is detecting your unique features...</p>
+          <div class="analyzing-steps">
+            <div class="analysis-step active">
+              <span class="dot pulse"></span>
+              Loading face detection models
+            </div>
+            <div class="analysis-step">
+              <span class="dot"></span>
+              Detecting facial landmarks
+            </div>
+            <div class="analysis-step">
+              <span class="dot"></span>
+              Calculating face shape & symmetry
+            </div>
+            <div class="analysis-step">
+              <span class="dot"></span>
+              Determining color season
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Results Step -->
+    @if (currentStep() === 'results' && hasResults()) {
+      <div class="results-section fade-in-up">
+        <!-- Results Navigation Tabs -->
+        <div class="results-tabs">
+          @for (tab of tabs; track tab.id) {
+            <button
+              class="tab-btn"
+              [class.active]="currentTab() === tab.id"
+              (click)="currentTab.set(tab.id)"
+            >
+              <span class="tab-icon">{{ tab.icon }}</span>
+              <span class="tab-label">{{ tab.label }}</span>
+            </button>
+          }
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+          @switch (currentTab()) {
+            @case ('face') {
+              <app-face-analysis [result]="faceAnalysisResult()!" />
+            }
+            @case ('color') {
+              <app-colorimetry [result]="colorimetryResult()!" />
+            }
+            @case ('hair') {
+              <app-hairstyle [result]="hairstyleResult()!" />
+            }
+            @case ('style') {
+              <app-styling
+                [faceAnalysis]="faceAnalysisResult()!"
+                [colorimetry]="colorimetryResult()!"
+              />
+            }
+            @case ('report') {
+              <app-infographic
+                [faceAnalysis]="faceAnalysisResult()!"
+                [colorimetry]="colorimetryResult()!"
+                [hairstyle]="hairstyleResult()!"
+              />
+            }
+          }
+        </div>
+
+        <!-- Reset Button -->
+        <div class="results-footer">
+          <button class="btn-secondary" (click)="resetAnalysis()">
+            Analyze Another Photo
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Hidden canvas for analysis -->
+  <canvas #analysisCanvas style="display: none"></canvas>
+</div>

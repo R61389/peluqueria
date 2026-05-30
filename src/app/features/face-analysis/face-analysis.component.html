@@ -1,0 +1,134 @@
+<div class="face-analysis">
+  <div class="section-header">
+    <h2 class="section-title font-display">Face Analysis</h2>
+    <p class="section-subtitle">AI-powered facial structure detection</p>
+  </div>
+
+  <!-- Face Shape Card -->
+  <div class="card face-shape-card fade-in-up">
+    <div class="face-shape-content">
+      <div class="face-shape-diagram">
+        <svg viewBox="0 0 120 140" width="120" height="140">
+          @switch (result().faceShape) {
+            @case ('oval') {
+              <ellipse cx="60" cy="70" rx="40" ry="55" fill="none" stroke="#c9a96e" stroke-width="2"/>
+              <line x1="60" y1="15" x2="60" y2="125" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+              <line x1="20" y1="70" x2="100" y2="70" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+            }
+            @case ('round') {
+              <circle cx="60" cy="70" r="48" fill="none" stroke="#c9a96e" stroke-width="2"/>
+              <line x1="60" y1="22" x2="60" y2="118" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+            }
+            @case ('square') {
+              <rect x="15" y="15" width="90" height="110" rx="8" ry="8" fill="none" stroke="#c9a96e" stroke-width="2"/>
+            }
+            @case ('rectangular') {
+              <rect x="22" y="8" width="76" height="124" rx="8" ry="8" fill="none" stroke="#c9a96e" stroke-width="2"/>
+            }
+            @case ('triangular') {
+              <path d="M 60 10 L 100 125 L 20 125 Z" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linejoin="round"/>
+            }
+            @case ('heart') {
+              <path d="M 15 30 Q 15 10 35 10 Q 60 10 60 35 Q 60 10 85 10 Q 105 10 105 30 Q 105 55 60 125 Q 15 55 15 30 Z" fill="none" stroke="#c9a96e" stroke-width="2"/>
+            }
+          }
+        </svg>
+        <app-confidence-badge [confidence]="result().faceShapeConfidence" label="Match" />
+      </div>
+
+      <div class="face-shape-info">
+        <div class="shape-name">
+          <span class="label">Face Shape</span>
+          <h3 class="value font-display">{{ faceShapeLabel() }}</h3>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric">
+            <span class="metric-label">Age</span>
+            <span class="metric-value">~{{ result().estimatedAge }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Gender</span>
+            <span class="metric-value">{{ genderLabel() }}</span>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Contrast</span>
+            <span class="metric-value">{{ contrastLabel() }}</span>
+          </div>
+        </div>
+
+        <!-- Symmetry meter -->
+        <div class="symmetry-section">
+          <div class="symmetry-header">
+            <span class="label">Facial Symmetry</span>
+            <span class="symmetry-value">{{ result().facialSymmetry }}%</span>
+          </div>
+          <div class="symmetry-bar">
+            <div class="symmetry-fill" [style.width.%]="result().facialSymmetry"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skin Analysis Card -->
+  <div class="card skin-card fade-in-up">
+    <h3 class="card-title">Skin Analysis</h3>
+    <div class="skin-content">
+      <div class="skin-tone-display">
+        <div class="tone-swatch" [style.background]="skinToneHex()"></div>
+        <div class="tone-info">
+          <span class="label">Skin Tone</span>
+          <span class="tone-name">{{ skinToneLabel() }}</span>
+        </div>
+      </div>
+
+      <div class="undertone-badge" [class]="result().skinUndertone">
+        <span class="undertone-dot"></span>
+        <span>{{ undertoneLabel() }} Undertone</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Symmetry Circle Card -->
+  <div class="card symmetry-card fade-in-up">
+    <div class="symmetry-circle-container">
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
+        <circle
+          cx="50" cy="50" r="36"
+          fill="none"
+          stroke="#c9a96e"
+          stroke-width="8"
+          stroke-linecap="round"
+          [attr.stroke-dasharray]="circumference"
+          [attr.stroke-dashoffset]="symmetryDashOffset()"
+          transform="rotate(-90 50 50)"
+          style="transition: stroke-dashoffset 1s ease"
+        />
+        <text x="50" y="54" text-anchor="middle" fill="#f0eff4" font-size="18" font-weight="600">
+          {{ result().facialSymmetry }}
+        </text>
+      </svg>
+      <div class="symmetry-label">
+        <span>Symmetry Score</span>
+        <span class="sub">out of 100</span>
+      </div>
+    </div>
+
+    <div class="confidence-details">
+      <div class="confidence-row">
+        <span>Shape Detection</span>
+        <app-confidence-badge [confidence]="result().faceShapeConfidence" />
+      </div>
+      <div class="confidence-row">
+        <span>Age Estimate</span>
+        <app-confidence-badge [confidence]="result().ageConfidence" />
+      </div>
+      <div class="confidence-row">
+        <span>Gender Detection</span>
+        <app-confidence-badge [confidence]="result().genderConfidence" />
+      </div>
+    </div>
+  </div>
+</div>
