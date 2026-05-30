@@ -41,7 +41,7 @@ import { CommonModule } from '@angular/common';
     <div class="nav-right">
       <div class="user-btn" (click)="dropdownOpen.set(!dropdownOpen())">
         <div class="avatar">{{ initial() }}</div>
-        <span class="user-name">{{ auth.currentUser()?.name?.split(' ')[0] }}</span>
+        <span class="user-name">{{ firstName() }}</span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" [style.transform]="dropdownOpen() ? 'rotate(180deg)' : ''" style="transition:transform 0.2s; color: #9997b0;"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5"/></svg>
 
         @if (dropdownOpen()) {
@@ -270,6 +270,11 @@ export class NavbarComponent {
 
   initial() {
     return this.auth.currentUser()?.name?.charAt(0)?.toUpperCase() ?? '?';
+  }
+
+  firstName() {
+    const parts = this.auth.currentUser()?.name?.split(' ');
+    return parts?.[0] ?? '';
   }
 
   roleLabel() {

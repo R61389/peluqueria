@@ -446,7 +446,7 @@ export class LoginComponent implements AfterViewInit {
     if (this.cardRef?.nativeElement) {
       animate(this.cardRef.nativeElement,
         { opacity: [0, 1], y: [30, 0] },
-        { duration: 0.7, easing: [0.16, 1, 0.3, 1] }
+        { duration: 0.7 }
       );
     }
   }
