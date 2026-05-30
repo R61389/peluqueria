@@ -1,0 +1,224 @@
+.infographic-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.export-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  h2 {
+    font-size: 24px;
+    background: linear-gradient(135deg, #c9a96e, #e8c990);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .btn-export {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #c9a96e, #e8c990);
+    color: #0a0a0f;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(201, 169, 110, 0.3);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spinner-sm {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(10, 10, 15, 0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  }
+}
+
+.infographic-panel {
+  background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%);
+  border: 1px solid rgba(201, 169, 110, 0.2);
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.inf-header {
+  text-align: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(201, 169, 110, 0.15);
+  margin-bottom: 24px;
+
+  .inf-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: #c9a96e;
+    margin-bottom: 4px;
+  }
+
+  .inf-tagline {
+    font-size: 13px;
+    color: #5a5870;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+}
+
+.inf-section {
+  padding: 20px 0;
+
+  .inf-section-label {
+    font-size: 11px;
+    color: #c9a96e;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+}
+
+.inf-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.inf-face-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .inf-badge {
+    flex: 1;
+    min-width: 80px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 12px 16px;
+    text-align: center;
+
+    .inf-badge-value {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      color: #f0eff4;
+      margin-bottom: 4px;
+      text-transform: capitalize;
+    }
+
+    .inf-badge-label {
+      font-size: 11px;
+      color: #5a5870;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+  }
+}
+
+.inf-season-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .inf-season-emoji {
+    font-size: 48px;
+    line-height: 1;
+  }
+
+  .inf-season-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f0eff4;
+    margin-bottom: 10px;
+    text-transform: capitalize;
+  }
+
+  .inf-swatches {
+    display: flex;
+    gap: 6px;
+
+    .inf-swatch {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+.inf-hair {
+  .inf-hair-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #f0eff4;
+    margin-bottom: 4px;
+  }
+
+  .inf-hair-score {
+    display: inline-block;
+    background: rgba(201, 169, 110, 0.15);
+    color: #c9a96e;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+  }
+
+  .inf-hair-desc {
+    font-size: 13px;
+    color: #9997b0;
+    line-height: 1.6;
+  }
+}
+
+.inf-metals {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .inf-metal-chip {
+    background: rgba(201, 169, 110, 0.12);
+    border: 1px solid rgba(201, 169, 110, 0.3);
+    color: #c9a96e;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+}
+
+.inf-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid rgba(201, 169, 110, 0.1);
+  margin-top: 20px;
+  font-size: 11px;
+  color: #5a5870;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

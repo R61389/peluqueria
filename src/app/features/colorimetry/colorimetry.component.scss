@@ -1,0 +1,247 @@
+.colorimetry {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-header {
+  margin-bottom: 8px;
+
+  .section-title {
+    font-size: 28px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #c9a96e, #e8c990);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 4px;
+  }
+
+  .section-subtitle {
+    color: #9997b0;
+    font-size: 14px;
+  }
+}
+
+.card {
+  background: #1a1a26;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+}
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: #f0eff4;
+  margin-bottom: 12px;
+}
+
+.card-desc {
+  font-size: 13px;
+  color: #9997b0;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.season-card {
+  &.spring {
+    background: linear-gradient(135deg, rgba(244, 164, 96, 0.15), rgba(255, 215, 0, 0.08));
+    border-color: rgba(244, 164, 96, 0.3);
+  }
+  &.summer {
+    background: linear-gradient(135deg, rgba(176, 196, 222, 0.15), rgba(221, 160, 221, 0.08));
+    border-color: rgba(176, 196, 222, 0.3);
+  }
+  &.autumn {
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.2), rgba(210, 105, 30, 0.1));
+    border-color: rgba(210, 105, 30, 0.3);
+  }
+  &.winter {
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(75, 0, 130, 0.1));
+    border-color: rgba(107, 114, 128, 0.3);
+  }
+
+  .season-main {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    .season-icon {
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    .season-info {
+      .season-subtype {
+        font-size: 12px;
+        color: #9997b0;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .season-name {
+        font-size: 28px;
+        color: #f0eff4;
+        margin-bottom: 12px;
+      }
+    }
+  }
+}
+
+.color-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .color-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      transform: scale(1.15);
+      z-index: 10;
+
+      .color-tooltip {
+        opacity: 1;
+      }
+    }
+
+    .color-tooltip {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 10, 15, 0.95);
+      color: #f0eff4;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+  }
+}
+
+.colors-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.sub-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9997b0;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.small-swatches {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .small-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.avoid-card {
+  border-color: rgba(239, 68, 68, 0.2);
+
+  .avoid-title {
+    color: #f87171;
+  }
+}
+
+.avoid-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .avoid-swatch {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    opacity: 0.7;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .x-mark {
+      position: relative;
+      z-index: 1;
+    }
+  }
+}
+
+.metals-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  .metal-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 8px 14px;
+
+    .metal-icon {
+      font-size: 16px;
+    }
+
+    .metal-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #f0eff4;
+    }
+  }
+}
+
+.characteristics-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .characteristic-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+    color: #9997b0;
+
+    .check-icon {
+      color: #c9a96e;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+}

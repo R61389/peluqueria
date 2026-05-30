@@ -1,0 +1,94 @@
+<div class="history-page">
+  <div class="history-header">
+    <div>
+      <h1 class="page-title font-display">Analysis History</h1>
+      <p class="page-subtitle">Your past style consultations</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/advisor" class="btn-primary">New Analysis</a>
+      @if (records().length > 0) {
+        <button class="btn-secondary" (click)="confirmDelete.set('all')">Clear All</button>
+      }
+    </div>
+  </div>
+
+  @if (confirmDelete() === 'all') {
+    <div class="confirm-dialog">
+      <p>Clear all history? This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn-danger" (click)="clearAll()">Yes, Clear All</button>
+        <button class="btn-secondary" (click)="confirmDelete.set(null)">Cancel</button>
+      </div>
+    </div>
+  }
+
+  @if (records().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </div>
+      <h3 class="empty-title">No analyses yet</h3>
+      <p class="empty-desc">Your style analyses will appear here after you complete your first session.</p>
+      <a routerLink="/advisor" class="btn-primary">Start Analysis</a>
+    </div>
+  } @else {
+    <div class="records-grid">
+      @for (record of records(); track record.id) {
+        <div class="record-card">
+          @if (confirmDelete() === record.id) {
+            <div class="delete-confirm">
+              <p>Delete this analysis?</p>
+              <div class="confirm-actions">
+                <button class="btn-danger-sm" (click)="deleteRecord(record.id)">Delete</button>
+                <button class="btn-cancel-sm" (click)="confirmDelete.set(null)">Cancel</button>
+              </div>
+            </div>
+          } @else {
+            <div class="record-content">
+              @if (record.imageData) {
+                <div class="record-image">
+                  <img [src]="record.imageData" alt="Analysis photo" />
+                </div>
+              } @else {
+                <div class="record-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+              }
+
+              <div class="record-details">
+                <div class="record-date">{{ formatDate(record.timestamp) }}</div>
+
+                <div class="record-badges">
+                  <span class="info-badge shape">
+                    {{ capitalize(record.faceAnalysis.faceShape) }}
+                  </span>
+                  <span class="info-badge season">
+                    {{ seasonEmoji(record.colorimetry.dominantSeason) }}
+                    {{ capitalize(record.colorimetry.dominantSeason) }}
+                  </span>
+                </div>
+
+                <div class="record-hair">
+                  Top style: {{ record.hairstyle.topRecommendations[0] ? record.hairstyle.topRecommendations[0].name : 'N/A' }}
+                </div>
+              </div>
+
+              <button class="delete-btn" (click)="confirmDelete.set(record.id)">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

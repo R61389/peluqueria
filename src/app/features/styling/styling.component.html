@@ -1,0 +1,101 @@
+<div class="styling">
+  <div class="section-header">
+    <h2 class="section-title font-display">Style Guide</h2>
+    <p class="section-subtitle">Curated looks for your profile</p>
+  </div>
+
+  <!-- Style Grid -->
+  <div class="style-grid">
+    @for (style of styleLooks; track style.category) {
+      <div
+        class="style-card"
+        [class.selected]="selectedStyle?.category === style.category"
+        (click)="selectStyle(style)"
+      >
+        <div class="style-colors">
+          @for (color of style.recommendedColors.slice(0, 4); track color) {
+            <div class="mini-swatch" [style.background]="color"></div>
+          }
+        </div>
+        <h3 class="style-name">{{ style.name }}</h3>
+        <div class="style-seasons">
+          @for (season of style.season; track season) {
+            <span class="season-chip">{{ season }}</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Selected Style Detail -->
+  @if (selectedStyle) {
+    <div class="card style-detail fade-in-up">
+      <div class="detail-header">
+        <h3 class="detail-title font-display">{{ selectedStyle.name }}</h3>
+        <div class="detail-colors">
+          @for (color of selectedStyle.recommendedColors; track color) {
+            <div class="color-dot" [style.background]="color"></div>
+          }
+        </div>
+      </div>
+
+      <div class="detail-sections">
+        <!-- Key Garments -->
+        <div class="detail-section">
+          <h4 class="detail-section-title">Key Pieces</h4>
+          <ul class="garment-list">
+            @for (garment of selectedStyle.keyGarments; track garment) {
+              <li>
+                <span class="bullet">▸</span>
+                {{ garment }}
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Combinations -->
+        <div class="detail-section">
+          <h4 class="detail-section-title">Outfit Combos</h4>
+          <div class="combos">
+            @for (combo of selectedStyle.combinations; track combo) {
+              <div class="combo-item">
+                <span class="combo-icon">✦</span>
+                <span>{{ combo }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Do/Don't -->
+        <div class="do-dont">
+          <div class="do-section">
+            <h4 class="detail-section-title do-title">Do</h4>
+            <ul>
+              @for (look of selectedStyle.idealLooks; track look) {
+                <li class="do-item">
+                  <span class="check">✓</span>
+                  {{ look }}
+                </li>
+              }
+            </ul>
+          </div>
+          <div class="dont-section">
+            <h4 class="detail-section-title dont-title">Don't</h4>
+            <ul>
+              @for (look of selectedStyle.avoidLooks; track look) {
+                <li class="dont-item">
+                  <span class="x">✕</span>
+                  {{ look }}
+                </li>
+              }
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <div class="select-hint">
+      <p>Select a style category above to see detailed recommendations</p>
+    </div>
+  }
+</div>
