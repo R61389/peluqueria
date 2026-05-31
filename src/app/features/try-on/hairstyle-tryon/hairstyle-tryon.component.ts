@@ -570,25 +570,39 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
   readonly preloadedPhotoUrl = input<string | null>(null);
   readonly preloadedAnalysis = input<FaceAnalysisResult | null>(null);
 
+  private hasAutoTriggered = signal(false);
+
   constructor() {
-    // Cuando la Asesoría IA pasa una foto, la precargamos sin volver a subir
+    // Cuando Asesoría IA pasa foto + análisis, precargamos y auto-generamos
     effect(() => {
-      const url = this.preloadedPhotoUrl();
-      if (url && url !== this.photoUrl()) {
-        this.photoUrl.set(url);
-        this.aiService.reset();
-        this.analysisResult.set(null);
-        this.analysisError.set('');
-      }
-    });
-    // Cuando pasa el análisis ya hecho, lo reutilizamos directamente
-    effect(() => {
+      const url    = this.preloadedPhotoUrl();
       const result = this.preloadedAnalysis();
-      if (result) {
-        this.analysisResult.set(result);
-        if (result.gender === 'male')   this.genderFilter.set('male');
-        if (result.gender === 'female') this.genderFilter.set('female');
-      }
+      if (!url || !result || this.hasAutoTriggered()) return;
+
+      this.photoUrl.set(url);
+      this.analysisResult.set(result);
+      this.aiService.reset();
+      this.analysisError.set('');
+
+      if (result.gender === 'male')   this.genderFilter.set('male');
+      if (result.gender === 'female') this.genderFilter.set('female');
+
+      // Auto-select first recommended style for the detected face shape
+      const recommended = AI_HAIRSTYLE_STYLES.filter(s => {
+        const genderOk = result.gender === 'male'
+          ? s.gender === 'male' || s.gender === 'unisex'
+          : result.gender === 'female'
+            ? s.gender === 'female' || s.gender === 'unisex'
+            : true;
+        return genderOk && s.compatibleFaceShapes.includes(result.faceShape);
+      });
+
+      const firstStyle = recommended[0] ?? AI_HAIRSTYLE_STYLES[0];
+      this.selectedStyle.set(firstStyle);
+      this.hasAutoTriggered.set(true);
+
+      // Let Angular settle signals before triggering generation
+      setTimeout(() => this.generate(), 500);
     });
   }
 

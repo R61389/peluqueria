@@ -27,16 +27,13 @@ import { CommonModule } from '@angular/common';
         <a routerLink="/admin" routerLinkActive="active">Panel Admin</a>
         <a routerLink="/appointments" routerLinkActive="active">Citas</a>
         <a routerLink="/advisor" routerLinkActive="active">Asesoría IA</a>
-        <a routerLink="/try-on" routerLinkActive="active">Try-On</a>
       } @else if (auth.isBarber()) {
         <a routerLink="/barber" routerLinkActive="active">Dashboard</a>
         <a routerLink="/appointments" routerLinkActive="active">Mis Citas</a>
-        <a routerLink="/try-on" routerLinkActive="active">Try-On</a>
       } @else {
         <a routerLink="/advisor" routerLinkActive="active">Asesoría IA</a>
         <a routerLink="/appointments" routerLinkActive="active">Mis Citas</a>
         <a routerLink="/history" routerLinkActive="active">Historial</a>
-        <a routerLink="/try-on" routerLinkActive="active">Try-On</a>
       }
     </div>
 
@@ -80,16 +77,13 @@ import { CommonModule } from '@angular/common';
         <a routerLink="/admin" routerLinkActive="active" (click)="menuOpen.set(false)">Panel Admin</a>
         <a routerLink="/appointments" routerLinkActive="active" (click)="menuOpen.set(false)">Citas</a>
         <a routerLink="/advisor" routerLinkActive="active" (click)="menuOpen.set(false)">Asesoría IA</a>
-        <a routerLink="/try-on" routerLinkActive="active" (click)="menuOpen.set(false)">Try-On</a>
       } @else if (auth.isBarber()) {
         <a routerLink="/barber" routerLinkActive="active" (click)="menuOpen.set(false)">Dashboard</a>
         <a routerLink="/appointments" routerLinkActive="active" (click)="menuOpen.set(false)">Mis Citas</a>
-        <a routerLink="/try-on" routerLinkActive="active" (click)="menuOpen.set(false)">Try-On</a>
       } @else {
         <a routerLink="/advisor" routerLinkActive="active" (click)="menuOpen.set(false)">Asesoría IA</a>
         <a routerLink="/appointments" routerLinkActive="active" (click)="menuOpen.set(false)">Mis Citas</a>
         <a routerLink="/history" routerLinkActive="active" (click)="menuOpen.set(false)">Historial</a>
-        <a routerLink="/try-on" routerLinkActive="active" (click)="menuOpen.set(false)">Try-On</a>
       }
       <button class="logout-mobile" (click)="logout()">Cerrar sesión</button>
     </div>

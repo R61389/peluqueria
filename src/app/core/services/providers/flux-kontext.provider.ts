@@ -79,7 +79,7 @@ export class FluxKontextProvider implements ImageGenerationProvider {
           input_image: imageBase64,
           prompt,
           output_format: 'jpg',
-          safety_tolerance: 2,
+          safety_tolerance: 5,
         },
       }),
     });
