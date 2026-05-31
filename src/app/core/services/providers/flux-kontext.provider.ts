@@ -6,24 +6,11 @@ import {
   GenerationProgress,
 } from '../../models/hairstyle-ai.model';
 
-/**
- * FluxKontextProvider — uses FLUX Kontext via Replicate.
- *
- * FLUX Kontext is purpose-built for semantic image editing (modifying a
- * specific region while preserving the rest), making it the ideal model
- * for hairstyle try-on.
- *
- * Model on Replicate: black-forest-labs/flux-kontext-pro
- * Docs: https://replicate.com/black-forest-labs/flux-kontext-pro
- *
- * Configure API key:
- *   localStorage.setItem('replicate_api_key', 'r8_...');
- */
 @Injectable()
 export class FluxKontextProvider implements ImageGenerationProvider {
   readonly providerName = 'flux-kontext' as const;
 
-  private readonly MODEL = 'black-forest-labs/flux-kontext-pro';
+  private readonly MODEL    = 'black-forest-labs/flux-kontext-pro';
   private readonly API_BASE = 'https://api.replicate.com/v1';
 
   async generate(
@@ -33,49 +20,53 @@ export class FluxKontextProvider implements ImageGenerationProvider {
     const apiKey = localStorage.getItem('replicate_api_key') ?? '';
     if (!apiKey) {
       throw new Error(
-        'Replicate API key required for FLUX Kontext. ' +
-        'Set it via: localStorage.setItem("replicate_api_key", "r8_...")',
+        'No hay clave de Replicate. ' +
+        'Ejecuta en la consola: localStorage.setItem("replicate_api_key", "r8_...")',
       );
     }
 
-    const t0 = Date.now();
-    const prompt = this.buildKontextPrompt(request);
+    const t0     = Date.now();
+    const prompt = this.buildPrompt(request);
 
-    onProgress({ status: 'uploading',  percent: 8,  message: 'Preparando imagen…',         estimatedSecondsLeft: 25 });
+    // ── 1. Resize image to 768 px max (avoid payload-too-large errors) ───────
+    onProgress({ status: 'uploading', percent: 8, message: 'Preparando imagen…', estimatedSecondsLeft: 30 });
+    const image = await this.resizeToJpeg(request.imageBase64, 768);
 
-    const prediction = await this.createPrediction(apiKey, request.imageBase64, prompt);
+    // ── 2. Create prediction ─────────────────────────────────────────────────
+    onProgress({ status: 'uploading', percent: 18, message: 'Enviando a Replicate…', estimatedSecondsLeft: 25 });
+    const predictionId = await this.createPrediction(apiKey, image, prompt);
+    console.log('[FLUX Kontext] prediction id:', predictionId);
 
-    onProgress({ status: 'queued',    percent: 18, message: 'En cola FLUX Kontext…',       estimatedSecondsLeft: 22 });
+    onProgress({ status: 'queued', percent: 25, message: 'En cola de generación…', estimatedSecondsLeft: 22 });
 
-    const outputUrl = await this.pollUntilDone(apiKey, prediction.id, onProgress);
+    // ── 3. Poll until done ───────────────────────────────────────────────────
+    const outputUrl = await this.poll(apiKey, predictionId, onProgress);
+    console.log('[FLUX Kontext] output url:', outputUrl);
 
-    onProgress({ status: 'processing', percent: 94, message: 'Descargando resultado…',   estimatedSecondsLeft: 2 });
-    const generatedImage = await this.fetchAsDataUrl(outputUrl);
-
+    // ── 4. Return the output URL directly — no CORS fetch needed ────────────
     onProgress({ status: 'done', percent: 100, message: '¡Imagen generada!' });
 
     return {
-      generatedImage,
+      generatedImage: outputUrl,   // URL de Replicate CDN, funciona como src de <img>
       prompt,
-      negativePrompt: '',   // FLUX Kontext uses instruction-based editing, no negative prompt
-      provider: `FLUX Kontext Pro (Replicate)`,
+      negativePrompt: '',
+      provider: 'FLUX Kontext Pro · Replicate',
       durationMs: Date.now() - t0,
     };
   }
 
-  // ─── API ──────────────────────────────────────────────────────────────────
+  // ─── Create prediction ─────────────────────────────────────────────────────
 
   private async createPrediction(
     apiKey: string,
     imageBase64: string,
     prompt: string,
-  ): Promise<{ id: string }> {
+  ): Promise<string> {
     const res = await fetch(`${this.API_BASE}/models/${this.MODEL}/predictions`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        Prefer: 'wait',
       },
       body: JSON.stringify({
         input: {
@@ -89,63 +80,88 @@ export class FluxKontextProvider implements ImageGenerationProvider {
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      throw new Error(`FLUX Kontext error ${res.status}: ${JSON.stringify(err)}`);
+      const detail = (err as { detail?: string }).detail ?? JSON.stringify(err);
+      throw new Error(`Replicate ${res.status}: ${detail}`);
     }
-    return res.json();
+
+    const data = await res.json() as { id: string; status: string };
+    return data.id;
   }
 
-  private async pollUntilDone(
+  // ─── Poll until succeeded / failed ────────────────────────────────────────
+
+  private async poll(
     apiKey: string,
     id: string,
     onProgress: (p: GenerationProgress) => void,
   ): Promise<string> {
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 90; i++) {
       await this.delay(2000);
+
       const res = await fetch(`${this.API_BASE}/predictions/${id}`, {
         headers: { Authorization: `Bearer ${apiKey}` },
       });
-      if (!res.ok) throw new Error(`Poll error: ${res.status}`);
-      const data = await res.json();
+      if (!res.ok) throw new Error(`Poll error ${res.status}`);
+
+      const data = await res.json() as {
+        status: string;
+        output?: string | string[];
+        error?: string;
+      };
+
+      console.log(`[FLUX Kontext] poll ${i + 1} → ${data.status}`);
 
       if (data.status === 'succeeded') {
-        const out = Array.isArray(data.output) ? data.output[0] : data.output;
-        return typeof out === 'string' ? out : out?.url ?? out;
+        const out = data.output;
+        const url = Array.isArray(out) ? out[0] : out;
+        if (!url) throw new Error('Respuesta vacía de FLUX Kontext');
+        return url;
       }
-      if (data.status === 'failed')   throw new Error(`FLUX failed: ${data.error}`);
-      if (data.status === 'canceled') throw new Error('Prediction canceled');
 
-      const percent = Math.min(92, 20 + (i / 60) * 70);
+      if (data.status === 'failed')   throw new Error(`FLUX falló: ${data.error ?? 'error desconocido'}`);
+      if (data.status === 'canceled') throw new Error('Predicción cancelada');
+
+      const elapsed  = (i + 1) * 2;
+      const percent  = Math.min(90, 26 + (i / 90) * 64);
       onProgress({
         status: 'generating',
         percent,
-        message: `FLUX generando… (${i + 1}/60)`,
-        estimatedSecondsLeft: Math.max(1, (60 - i) * 2),
+        message: `Generando con FLUX Kontext… (${elapsed}s)`,
+        estimatedSecondsLeft: Math.max(1, (90 - i) * 2),
       });
     }
-    throw new Error('FLUX Kontext timed out');
+
+    throw new Error('Tiempo agotado después de 3 minutos');
   }
 
-  private async fetchAsDataUrl(url: string): Promise<string> {
-    const res = await fetch(url);
-    const blob = await res.blob();
+  // ─── Resize image before sending ──────────────────────────────────────────
+
+  private resizeToJpeg(dataUrl: string, maxPx: number): Promise<string> {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload  = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        const scale  = Math.min(1, maxPx / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width  = Math.round(img.naturalWidth  * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
     });
   }
 
-  // ─── FLUX-specific prompt ────────────────────────────────────────────────
+  // ─── Prompt ───────────────────────────────────────────────────────────────
 
-  private buildKontextPrompt(req: HairstyleGenerationRequest): string {
+  private buildPrompt(req: HairstyleGenerationRequest): string {
     return [
       `Change the hairstyle to ${req.hairstyleLabel}.`,
-      `Make the hair color ${req.hairColorName}.`,
-      'Keep all facial features exactly the same: eyes, nose, mouth, skin tone, face shape.',
-      'Keep the background, clothing, and pose identical.',
+      `Hair color: ${req.hairColorName}.`,
+      'Keep all facial features exactly the same: eyes, nose, mouth, skin tone, face shape, jawline.',
+      'Keep background, clothing, and pose identical.',
       'Only modify the hair: cut, length, volume, texture, and color.',
-      'Photorealistic, professional salon result.',
+      'Photorealistic, professional salon photography quality.',
     ].join(' ');
   }
 
