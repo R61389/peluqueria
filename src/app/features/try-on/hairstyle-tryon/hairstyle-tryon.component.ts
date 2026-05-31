@@ -701,6 +701,7 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
 
   // ── AI Generation ─────────────────────────────────────────────────────────
   async generate(): Promise<void> {
+    console.log('[STEP 1] Botón pulsado — canGenerate:', this.canGenerate());
     if (!this.canGenerate()) return;
 
     const photo = this.photoUrl()!;
@@ -708,17 +709,36 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
     const color = this.selectedColor();
     const shape = this.analysisResult()?.faceShape ?? 'oval';
 
-    // Ensure photo is base64 (convert blob URL if needed)
-    const imageBase64 = await this.toBase64(photo);
+    console.log('[STEP 2] Estado:', { photo: !!photo, style: style.id, color: color.hex, shape });
+    console.log('[STEP 3] Provider activo:', this.aiService.providerName);
+    console.log('[STEP 4] API key encontrada:', !!localStorage.getItem('replicate_api_key'));
 
-    await this.aiService.generate({
-      imageBase64,
-      hairstyle: style.id,
-      hairstyleLabel: style.label,
-      faceShape: shape,
-      hairColor: color.hex,
-      hairColorName: color.nameEs,
-    }).catch(() => {/* error already in progress signal */});
+    // ── Convert blob URL → base64 (bug fix: no crossOrigin en blob URLs) ─────
+    let imageBase64: string;
+    try {
+      imageBase64 = await this.toBase64(photo);
+      console.log('[STEP 5] toBase64 OK — longitud:', imageBase64.length);
+    } catch (err) {
+      console.error('[STEP 5] toBase64 FALLÓ:', err);
+      this.aiService['progress'].set({ status: 'error', percent: 0, message: 'No se pudo leer la imagen. Intenta con otra foto.' });
+      return;
+    }
+
+    console.log('[STEP 6] Llamando aiService.generate()…');
+    try {
+      await this.aiService.generate({
+        imageBase64,
+        hairstyle: style.id,
+        hairstyleLabel: style.label,
+        faceShape: shape,
+        hairColor: color.hex,
+        hairColorName: color.nameEs,
+      });
+      console.log('[STEP 7] aiService.generate() completado');
+    } catch (err) {
+      console.error('[STEP 7] aiService.generate() FALLÓ:', err);
+      // error ya está en aiService.progress (status: 'error')
+    }
   }
 
   download(): void {
@@ -741,22 +761,25 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
   }
 
   private toBase64(src: string): Promise<string> {
-    // If already a data URL, return as-is
     if (src.startsWith('data:')) return Promise.resolve(src);
 
     return new Promise((resolve, reject) => {
       const img = new Image();
-      img.crossOrigin = 'anonymous';
+      // NO crossOrigin en blob URLs — causa onerror en algunos navegadores
       img.onload = () => {
-        const maxW = Math.min(img.naturalWidth, 1024);
-        const scale = maxW / img.naturalWidth;
-        const canvas = document.createElement('canvas');
-        canvas.width  = maxW;
-        canvas.height = Math.round(img.naturalHeight * scale);
-        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', 0.9));
+        try {
+          const maxW = Math.min(img.naturalWidth, 1024);
+          const scale = maxW / img.naturalWidth;
+          const canvas = document.createElement('canvas');
+          canvas.width  = maxW;
+          canvas.height = Math.round(img.naturalHeight * scale);
+          canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        } catch (e) {
+          reject(e);
+        }
       };
-      img.onerror = reject;
+      img.onerror = (e) => reject(new Error(`No se pudo cargar la imagen: ${e}`));
       img.src = src;
     });
   }

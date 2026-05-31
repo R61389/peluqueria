@@ -17,7 +17,9 @@ export class FluxKontextProvider implements ImageGenerationProvider {
     request: HairstyleGenerationRequest,
     onProgress: (p: GenerationProgress) => void,
   ): Promise<HairstyleGenerationResult> {
+    console.log('[STEP 5] FluxKontextProvider.generate() ejecutado');
     const apiKey = localStorage.getItem('replicate_api_key') ?? '';
+    console.log('[STEP 6] API key presente:', !!apiKey, '| longitud:', apiKey.length);
     if (!apiKey) {
       throw new Error(
         'No hay clave de Replicate. ' +
@@ -27,6 +29,7 @@ export class FluxKontextProvider implements ImageGenerationProvider {
 
     const t0     = Date.now();
     const prompt = this.buildPrompt(request);
+    console.log('[STEP 7] Prompt construido:', prompt.slice(0, 80) + '…');
 
     // ── 1. Resize image to 768 px max (avoid payload-too-large errors) ───────
     onProgress({ status: 'uploading', percent: 8, message: 'Preparando imagen…', estimatedSecondsLeft: 30 });
@@ -34,8 +37,9 @@ export class FluxKontextProvider implements ImageGenerationProvider {
 
     // ── 2. Create prediction ─────────────────────────────────────────────────
     onProgress({ status: 'uploading', percent: 18, message: 'Enviando a Replicate…', estimatedSecondsLeft: 25 });
+    console.log('[STEP 8] Llamando createPrediction…');
     const predictionId = await this.createPrediction(apiKey, image, prompt);
-    console.log('[FLUX Kontext] prediction id:', predictionId);
+    console.log('[STEP 9] Prediction creada. ID:', predictionId);
 
     onProgress({ status: 'queued', percent: 25, message: 'En cola de generación…', estimatedSecondsLeft: 22 });
 

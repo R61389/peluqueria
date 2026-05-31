@@ -49,6 +49,8 @@ export class HairstyleAiService {
    * Returns the final result for one-shot consumption.
    */
   async generate(request: HairstyleGenerationRequest): Promise<HairstyleGenerationResult> {
+    console.log('[STEP 3] HairstyleAiService.generate() iniciado');
+    console.log('[STEP 4] Provider seleccionado:', this.provider.providerName);
     this.abortFlag = false;
     this.result.set(null);
     this.progress.set({ status: 'analyzing', percent: 5, message: 'Iniciando…' });
@@ -56,7 +58,9 @@ export class HairstyleAiService {
     try {
       const enrichedRequest = this.enrichRequest(request);
 
+      console.log('[STEP 5] Llamando provider.generate()…');
       const result = await this.provider.generate(enrichedRequest, (p) => {
+        console.log('[PROGRESS]', p.status, p.percent + '%', p.message);
         if (!this.abortFlag) this.progress.set(p);
       });
 
@@ -69,6 +73,7 @@ export class HairstyleAiService {
 
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
+      console.error('[STEP ERROR] HairstyleAiService error:', message, err);
       this.progress.set({ status: 'error', percent: 0, message });
       throw err;
     }
