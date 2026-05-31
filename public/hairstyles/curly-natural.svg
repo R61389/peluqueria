@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 380" fill="none">
+  <!-- Natural Curls: voluminous afro-textured curly hair -->
+  <defs>
+    <radialGradient id="curlG" cx="50%" cy="40%" r="55%">
+      <stop offset="0" stop-color="#4a2e14"/>
+      <stop offset="0.7" stop-color="#2a1a08"/>
+      <stop offset="1" stop-color="#1a0e04"/>
+    </radialGradient>
+  </defs>
+  <!-- Main voluminous mass - wider than typical -->
+  <ellipse cx="220" cy="170" rx="165" ry="148" fill="url(#curlG)"/>
+  <!-- Curl texture - many small wavy bumps on the silhouette -->
+  <!-- Top bumps -->
+  <path d="M110 98 Q118 82 130 78 Q142 82 148 96 Q142 88 130 86 Q118 88 110 98 Z" fill="#3a2210"/>
+  <path d="M148 80 Q156 64 168 60 Q180 64 186 78 Q180 70 168 68 Q156 70 148 80 Z" fill="#3a2210"/>
+  <path d="M186 68 Q194 52 208 48 Q222 52 228 66 Q222 58 208 56 Q194 58 186 68 Z" fill="#3a2210"/>
+  <path d="M228 68 Q236 52 250 48 Q264 52 270 66 Q264 58 250 56 Q236 58 228 68 Z" fill="#3a2210"/>
+  <path d="M268 80 Q276 64 290 60 Q304 64 310 78 Q304 70 290 68 Q276 70 268 80 Z" fill="#3a2210"/>
+  <path d="M306 98 Q316 82 330 78 Q344 82 350 96 Q344 88 330 86 Q316 88 306 98 Z" fill="#3a2210"/>
+  <!-- Left side bumps -->
+  <path d="M58 155 Q46 163 44 178 Q46 192 58 198 Q48 190 48 178 Q48 164 58 155 Z" fill="#3a2210"/>
+  <path d="M56 195 Q44 203 44 218 Q46 232 58 237 Q48 230 48 218 Q48 205 56 195 Z" fill="#3a2210"/>
+  <path d="M60 234 Q48 244 50 260 Q54 274 68 278 Q58 270 58 258 Q58 245 60 234 Z" fill="#3a2210"/>
+  <!-- Right side bumps -->
+  <path d="M382 155 Q394 163 396 178 Q394 192 382 198 Q392 190 392 178 Q392 164 382 155 Z" fill="#3a2210"/>
+  <path d="M384 195 Q396 203 396 218 Q394 232 382 237 Q392 230 392 218 Q392 205 384 195 Z" fill="#3a2210"/>
+  <path d="M380 234 Q392 244 390 260 Q386 274 372 278 Q382 270 382 258 Q382 245 380 234 Z" fill="#3a2210"/>
+  <!-- Internal curl texture -->
+  <g opacity="0.4" stroke="#6b4228" stroke-width="1.4">
+    <path d="M120 150 C126 140 138 135 148 140 C156 145 158 155 152 162"/><path d="M148 138 C154 128 166 123 176 128 C184 133 186 143 180 150"/>
+    <path d="M176 130 C182 120 196 116 208 122 C216 128 217 140 210 146"/><path d="M210 128 C216 118 230 114 242 120 C250 126 251 138 244 144"/>
+    <path d="M244 132 C250 122 264 118 276 124 C284 130 285 142 278 148"/><path d="M278 140 C284 130 298 126 310 132 C318 138 319 150 312 156"/>
+    <path d="M130 170 C136 160 148 155 158 160 C166 165 168 175 162 182"/><path d="M160 165 C166 155 178 150 188 155 C196 160 198 172 192 178"/>
+    <path d="M190 162 C196 152 210 148 222 154 C230 160 231 172 224 178"/><path d="M224 163 C230 153 244 149 256 155 C264 161 265 173 258 179"/>
+    <path d="M258 168 C264 158 278 154 290 160 C298 166 299 178 292 184"/>
+  </g>
+  <!-- Subtle gloss on top -->
+  <ellipse cx="218" cy="125" rx="75" ry="30" fill="white" opacity="0.05"/>
+</svg>

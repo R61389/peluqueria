@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" fill="none">
+  <!-- Low Fade: fade starts just above ears, full volume on top -->
+  <!-- Faded sides - gradient from nothing to full -->
+  <path d="M62 210 Q54 180 58 155 Q64 128 82 110 L92 118 Q76 135 73 160 Q70 182 76 210 Z" fill="url(#fadeL)"/>
+  <path d="M338 210 Q346 180 342 155 Q336 128 318 110 L308 118 Q324 135 327 160 Q330 182 324 210 Z" fill="url(#fadeR)"/>
+  <defs>
+    <linearGradient id="fadeL" x1="62" y1="210" x2="82" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a0502" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#1a0d05" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#2a1a0a"/>
+    </linearGradient>
+    <linearGradient id="fadeR" x1="338" y1="210" x2="318" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a0502" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#1a0d05" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#2a1a0a"/>
+    </linearGradient>
+  </defs>
+  <!-- Top mass -->
+  <path d="M88 112 Q120 50 200 38 Q280 50 312 112 Q295 85 255 74 Q228 67 200 65 Q172 67 145 74 Q105 85 88 112 Z" fill="#2a1a0a"/>
+  <ellipse cx="200" cy="115" rx="122" ry="72" fill="#2a1a0a"/>
+  <!-- Top strands -->
+  <g opacity="0.5" stroke="#6b4228" stroke-width="1.8">
+    <path d="M148 118 C151 100 163 82 178 75"/><path d="M165 114 C168 95 181 77 198 70"/>
+    <path d="M182 112 C185 93 199 74 217 67"/><path d="M200 111 C203 92 217 74 235 68"/>
+    <path d="M216 113 C219 95 231 78 246 73"/><path d="M230 117 C233 100 243 85 256 81"/>
+    <path d="M133 123 C136 106 147 90 160 84"/>
+  </g>
+  <ellipse cx="197" cy="88" rx="70" ry="24" fill="white" opacity="0.07"/>
+</svg>

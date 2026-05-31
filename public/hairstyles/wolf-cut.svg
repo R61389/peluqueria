@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" fill="none">
+  <!-- Wolf Cut: curtain bangs, layers falling to mid-length, lots of volume -->
+  <defs>
+    <linearGradient id="wolfG" x1="200" y1="40" x2="200" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d2814"/>
+      <stop offset="0.6" stop-color="#2a1a0a"/>
+      <stop offset="1" stop-color="#1a0e06"/>
+    </linearGradient>
+  </defs>
+  <!-- Long sides falling past shoulders -->
+  <path d="M75 140 Q52 180 48 230 Q44 280 55 330 Q62 370 78 400 Q92 420 108 430 Q95 410 88 380 Q80 345 82 310 Q84 275 90 245 Q98 210 110 182 Z" fill="#1e1008"/>
+  <path d="M325 140 Q348 180 352 230 Q356 280 345 330 Q338 370 322 400 Q308 420 292 430 Q305 410 312 380 Q320 345 318 310 Q316 275 310 245 Q302 210 290 182 Z" fill="#1e1008"/>
+  <!-- Curtain bangs - parted center, flowing down both sides -->
+  <path d="M155 110 Q168 85 185 75 Q195 70 200 70 Q200 80 196 98 Q188 85 178 85 Q166 88 158 100 Z" fill="#2a1a0a"/>
+  <path d="M245 110 Q232 85 215 75 Q205 70 200 70 Q200 80 204 98 Q212 85 222 85 Q234 88 242 100 Z" fill="#2a1a0a"/>
+  <!-- Main volume mass -->
+  <path d="M90 110 Q115 48 200 30 Q285 48 310 110 Q295 78 262 64 Q232 54 200 52 Q168 54 138 64 Q105 78 90 110 Z" fill="#2a1a0a"/>
+  <ellipse cx="200" cy="118" rx="118" ry="78" fill="#2a1a0a"/>
+  <!-- Layered wispy ends -->
+  <path d="M90 240 Q75 300 80 370 Q72 320 75 270 Q78 245 90 230 Z" fill="url(#wolfG)" opacity="0.8"/>
+  <path d="M310 240 Q325 300 320 370 Q328 320 325 270 Q322 245 310 230 Z" fill="url(#wolfG)" opacity="0.8"/>
+  <!-- Strand layers -->
+  <g opacity="0.5" stroke="#6b4228" stroke-width="1.6">
+    <path d="M155 116 C158 96 168 76 183 66"/><path d="M170 112 C173 91 184 70 200 60"/>
+    <path d="M186 109 C189 88 202 66 218 57"/><path d="M201 108 C204 87 218 66 234 58"/>
+    <path d="M215 110 C218 90 229 71 244 64"/><path d="M229 115 C232 96 241 79 254 74"/>
+    <path d="M140 122 C143 103 153 85 166 78"/>
+    <!-- Long layer strands -->
+    <path d="M95 200 C88 250 85 310 90 370"/><path d="M108 195 C102 244 100 305 106 365"/>
+    <path d="M305 200 C312 250 315 310 310 370"/><path d="M292 195 C298 244 300 305 294 365"/>
+  </g>
+  <ellipse cx="197" cy="85" rx="70" ry="22" fill="white" opacity="0.07"/>
+</svg>

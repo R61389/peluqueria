@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 360" fill="none">
+  <!-- Quiff: front tuft raised up, textured volume -->
+  <defs>
+    <linearGradient id="quiffG" x1="200" y1="25" x2="200" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d2814"/>
+      <stop offset="1" stop-color="#1e1008"/>
+    </linearGradient>
+  </defs>
+  <!-- Base dome -->
+  <ellipse cx="200" cy="155" rx="120" ry="110" fill="#1e1008"/>
+  <!-- Quiff peak at front center -->
+  <path d="M155 120 Q175 60 200 35 Q225 60 245 120 Q232 95 218 82 Q208 74 200 72 Q192 74 182 82 Q168 95 155 120 Z" fill="url(#quiffG)"/>
+  <!-- Left side volume -->
+  <path d="M80 180 Q75 150 80 125 Q90 100 110 90 Q98 110 96 138 Q94 160 100 182 Z" fill="#1a0d06"/>
+  <!-- Right side volume -->
+  <path d="M320 180 Q325 150 320 125 Q310 100 290 90 Q302 110 304 138 Q306 160 300 182 Z" fill="#1a0d06"/>
+  <!-- Texture strands on top swept upward -->
+  <g opacity="0.55" stroke="#6b4228" stroke-width="1.8">
+    <path d="M162 130 C168 110 180 88 196 72"/><path d="M173 126 C179 106 191 84 208 68"/>
+    <path d="M185 122 C191 102 204 80 220 66"/><path d="M198 120 C203 101 215 80 230 68"/>
+    <path d="M210 122 C215 103 225 84 238 73"/><path d="M220 127 C225 109 233 93 244 83"/>
+    <path d="M150 135 C157 115 167 96 180 84"/>
+  </g>
+  <!-- Gloss -->
+  <ellipse cx="200" cy="80" rx="42" ry="15" fill="white" opacity="0.09"/>
+</svg>

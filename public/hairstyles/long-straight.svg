@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" fill="none">
+  <!-- Long Straight: smooth, flowing long hair with center part -->
+  <defs>
+    <linearGradient id="lsG" x1="200" y1="50" x2="200" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d2814"/>
+      <stop offset="0.5" stop-color="#2a1a0a"/>
+      <stop offset="1" stop-color="#0f0804" stop-opacity="0.6"/>
+    </linearGradient>
+  </defs>
+  <!-- Left panel of hair -->
+  <path d="M80 130 Q58 180 48 240 Q38 300 42 370 Q46 430 60 480 Q70 510 85 530 Q75 505 70 470 Q64 430 65 375 Q66 320 72 268 Q80 220 92 180 Z" fill="url(#lsG)"/>
+  <!-- Right panel -->
+  <path d="M320 130 Q342 180 352 240 Q362 300 358 370 Q354 430 340 480 Q330 510 315 530 Q325 505 330 470 Q336 430 335 375 Q334 320 328 268 Q320 220 308 180 Z" fill="url(#lsG)"/>
+  <!-- Top volume -->
+  <path d="M88 115 Q118 48 200 32 Q282 48 312 115 Q298 80 262 66 Q232 56 200 54 Q168 56 138 66 Q102 80 88 115 Z" fill="#2a1a0a"/>
+  <ellipse cx="200" cy="120" rx="120" ry="70" fill="#2a1a0a"/>
+  <!-- Center part line -->
+  <line x1="200" y1="50" x2="200" y2="110" stroke="#1a0e06" stroke-width="3" opacity="0.7"/>
+  <!-- Smooth straight strands flowing down -->
+  <g opacity="0.4" stroke="#5a3518" stroke-width="1.5">
+    <path d="M80 130 C76 200 72 270 70 350 Q68 420 72 480"/><path d="M93 120 C90 190 88 260 87 340 Q86 410 90 470"/>
+    <path d="M108 114 C106 183 105 253 105 333 Q105 403 108 463"/>
+    <path d="M320 130 C324 200 328 270 330 350 Q332 420 328 480"/><path d="M307 120 C310 190 312 260 313 340 Q314 410 310 470"/>
+    <path d="M292 114 C294 183 295 253 295 333 Q295 403 292 463"/>
+    <path d="M155 108 C154 176 153 244 153 322 Q153 392 155 450"/>
+    <path d="M170 106 C169 174 168 242 168 320 Q168 390 170 448"/>
+    <path d="M185 104 C184 172 183 240 183 318 Q183 388 185 446"/>
+    <path d="M215 104 C216 172 217 240 217 318 Q217 388 215 446"/>
+    <path d="M230 106 C231 174 232 242 232 320 Q232 390 230 448"/>
+    <path d="M245 108 C246 176 247 244 247 322 Q247 392 245 450"/>
+  </g>
+  <!-- Gloss highlight on top -->
+  <ellipse cx="200" cy="92" rx="65" ry="18" fill="white" opacity="0.09"/>
+  <!-- Gloss on left panel -->
+  <path d="M75 160 Q80 200 82 240" stroke="white" stroke-width="6" opacity="0.06" fill="none"/>
+  <!-- Gloss on right panel -->
+  <path d="M325 160 Q320 200 318 240" stroke="white" stroke-width="6" opacity="0.06" fill="none"/>
+</svg>

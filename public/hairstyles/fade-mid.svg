@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 340" fill="none">
+  <!-- Mid Fade: fade from ear level midway up, high volume top -->
+  <defs>
+    <linearGradient id="mfL" x1="60" y1="220" x2="90" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a0502" stop-opacity="0"/>
+      <stop offset="0.4" stop-color="#1a0d05" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#2a1a0a"/>
+    </linearGradient>
+    <linearGradient id="mfR" x1="340" y1="220" x2="310" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a0502" stop-opacity="0"/>
+      <stop offset="0.4" stop-color="#1a0d05" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#2a1a0a"/>
+    </linearGradient>
+  </defs>
+  <!-- Side fades -->
+  <path d="M60 220 Q52 185 57 155 Q65 122 88 102 L100 110 Q80 130 77 158 Q74 184 80 220 Z" fill="url(#mfL)"/>
+  <path d="M340 220 Q348 185 343 155 Q335 122 312 102 L300 110 Q320 130 323 158 Q326 184 320 220 Z" fill="url(#mfR)"/>
+  <!-- Top dome with extra height -->
+  <path d="M88 104 Q118 42 200 28 Q282 42 312 104 Q292 72 252 60 Q226 52 200 50 Q174 52 148 60 Q108 72 88 104 Z" fill="#2a1a0a"/>
+  <ellipse cx="200" cy="108" rx="124" ry="78" fill="#2a1a0a"/>
+  <!-- Top strands - pointing slightly upward for volume -->
+  <g opacity="0.5" stroke="#6b4228" stroke-width="1.8">
+    <path d="M150 116 C152 96 164 76 180 66"/><path d="M167 112 C169 91 183 70 200 60"/>
+    <path d="M185 109 C187 88 202 67 220 58"/><path d="M203 108 C205 87 220 66 238 58"/>
+    <path d="M220 110 C222 90 235 71 250 64"/><path d="M236 114 C238 95 249 78 262 73"/>
+    <path d="M134 122 C136 103 147 85 162 77"/>
+  </g>
+  <ellipse cx="197" cy="82" rx="72" ry="25" fill="white" opacity="0.07"/>
+</svg>

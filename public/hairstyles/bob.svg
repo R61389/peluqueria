@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 380" fill="none">
+  <!-- Bob: chin-length, blunt straight cut, smooth and elegant -->
+  <defs>
+    <linearGradient id="bobG" x1="200" y1="50" x2="200" y2="340" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d2814"/>
+      <stop offset="0.7" stop-color="#2a1a0a"/>
+      <stop offset="1" stop-color="#1a0e06"/>
+    </linearGradient>
+  </defs>
+  <!-- Left side panel going to chin level -->
+  <path d="M82 145 Q68 180 64 220 Q62 258 68 290 Q78 316 96 332 Q82 314 77 284 Q72 252 75 218 Q78 188 88 160 Z" fill="url(#bobG)"/>
+  <!-- Right side panel -->
+  <path d="M318 145 Q332 180 336 220 Q338 258 332 290 Q322 316 304 332 Q318 314 323 284 Q328 252 325 218 Q322 188 312 160 Z" fill="url(#bobG)"/>
+  <!-- Bottom blunt cut line -->
+  <path d="M78 295 Q120 318 200 322 Q280 318 322 295 Q300 308 200 312 Q100 308 78 295 Z" fill="#1a0e06"/>
+  <!-- Main top and body -->
+  <path d="M88 128 Q118 60 200 44 Q282 60 312 128 Q298 94 262 80 Q232 70 200 68 Q168 70 138 80 Q102 94 88 128 Z" fill="#2a1a0a"/>
+  <ellipse cx="200" cy="130" rx="120" ry="78" fill="#2a1a0a"/>
+  <!-- Vertical straight strands -->
+  <g opacity="0.45" stroke="#5a3518" stroke-width="1.6">
+    <path d="M84 155 C82 196 81 238 83 282"/><path d="M98 140 C97 181 96 223 98 268"/>
+    <path d="M115 130 C114 170 113 212 115 258"/><path d="M134 124 C133 164 132 206 134 252"/>
+    <path d="M155 120 C154 160 153 202 155 248"/><path d="M176 117 C175 157 174 199 176 245"/>
+    <path d="M200 116 C199 156 199 198 200 244"/><path d="M224 117 C225 157 226 199 224 245"/>
+    <path d="M245 120 C246 160 247 202 245 248"/><path d="M265 124 C267 164 268 206 266 252"/>
+    <path d="M284 130 C286 170 287 212 285 258"/><path d="M302 140 C303 181 304 223 302 268"/>
+    <path d="M316 155 C318 196 319 238 317 282"/>
+  </g>
+  <!-- Gloss highlight on top -->
+  <ellipse cx="200" cy="95" rx="68" ry="20" fill="white" opacity="0.09"/>
+</svg>

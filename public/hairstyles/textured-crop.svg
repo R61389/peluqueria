@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 320" fill="none">
+  <!-- Textured Crop: straight fringe, choppy textured top -->
+  <!-- Base -->
+  <ellipse cx="200" cy="145" rx="120" ry="105" fill="#1e1008"/>
+  <!-- Sides -->
+  <path d="M80 185 Q74 158 78 133 Q86 108 106 96 L114 104 Q97 120 95 146 Q93 168 99 188 Z" fill="#180c06"/>
+  <path d="M320 185 Q326 158 322 133 Q314 108 294 96 L286 104 Q303 120 305 146 Q307 168 301 188 Z" fill="#180c06"/>
+  <!-- Straight fringe bar across the forehead -->
+  <rect x="100" y="128" width="200" height="22" rx="4" fill="#2a1a0a"/>
+  <!-- Choppy texture on top - irregular spiky chunks -->
+  <path d="M105 128 Q120 80 145 65 Q160 57 172 62 Q180 72 182 85 Q190 68 200 60 Q210 68 218 85 Q220 72 228 62 Q240 57 255 65 Q280 80 295 128 Q275 100 255 90 Q238 83 220 85 Q208 75 200 75 Q192 75 180 85 Q162 83 145 90 Q125 100 105 128 Z" fill="#2a1a0a"/>
+  <!-- Textured spiky strands -->
+  <g opacity="0.6" stroke="#6b4228" stroke-width="2">
+    <path d="M145 118 C147 100 152 84 160 74"/><path d="M157 116 C159 97 165 80 174 70"/>
+    <path d="M168 114 C170 95 177 77 187 68"/><path d="M180 112 C182 93 190 75 200 66"/>
+    <path d="M192 111 C194 92 203 74 214 66"/><path d="M204 112 C206 93 215 76 226 68"/>
+    <path d="M216 114 C218 96 226 80 236 72"/><path d="M228 117 C230 100 237 86 246 79"/>
+  </g>
+  <!-- Gloss -->
+  <ellipse cx="197" cy="95" rx="60" ry="18" fill="white" opacity="0.07"/>
+</svg>
