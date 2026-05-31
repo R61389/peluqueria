@@ -1,12 +1,11 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FaceAnalysisResult } from '../../core/models/face-analysis.model';
-import { ConfidenceBadgeComponent } from '../../shared/components/confidence-badge/confidence-badge.component';
 
 @Component({
   selector: 'app-face-analysis',
   standalone: true,
-  imports: [CommonModule, ConfidenceBadgeComponent],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './face-analysis.component.html',
   styleUrls: ['./face-analysis.component.scss'],

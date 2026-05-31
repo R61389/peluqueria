@@ -1,97 +1,121 @@
 <div class="colorimetry">
   <div class="section-header">
-    <h2 class="section-title font-display">Color Season</h2>
-    <p class="section-subtitle">Personal colorimetry analysis</p>
+    <h2 class="section-title">Colorimetría Personal</h2>
+    <p class="section-subtitle">Análisis de temporada de color y paleta personal</p>
   </div>
 
-  <!-- Season Badge -->
-  <div class="card season-card fade-in-up" [class]="result().dominantSeason">
-    <div class="season-main">
-      <div class="season-icon">{{ seasonIcon() }}</div>
-      <div class="season-info">
-        <span class="season-subtype">{{ result().subType }}</span>
-        <h3 class="season-name font-display">{{ seasonLabel() }} Season</h3>
-        <app-confidence-badge [confidence]="result().seasonConfidence" label="Accuracy" />
-      </div>
-    </div>
-  </div>
+  <!-- MAIN SEASON CARD -->
+  <div class="season-magazine-card fade-in-up" [class]="'season-' + result().dominantSeason">
+    <div class="season-card-bg"></div>
+    <div class="season-card-content">
 
-  <!-- Recommended Palette -->
-  <div class="card fade-in-up">
-    <h3 class="card-title">Your Colors</h3>
-    <p class="card-desc">{{ result().recommendedPalette.description }}</p>
-    <div class="color-grid">
-      @for (color of result().recommendedPalette.colors; track color) {
-        <div
-          class="color-swatch"
-          [style.background]="color"
-          [title]="color"
-        >
-          <span class="color-tooltip">{{ color }}</span>
+      <!-- Season identity -->
+      <div class="season-identity">
+        <div class="season-icon-large">{{ seasonIcon() }}</div>
+        <div class="season-text">
+          <span class="season-subtype-tag">{{ result().subType }}</span>
+          <h3 class="season-name-large">{{ seasonLabel() }}</h3>
+          <div class="season-confidence">
+            <div class="conf-track-inline">
+              <div class="conf-fill-inline" [style.width.%]="result().seasonConfidence"></div>
+            </div>
+            <span class="conf-value-inline">{{ result().seasonConfidence }}% precisión</span>
+          </div>
         </div>
-      }
-    </div>
-  </div>
-
-  <!-- Accent & Neutral Colors -->
-  <div class="colors-row">
-    <div class="card half-card fade-in-up">
-      <h4 class="sub-card-title">Accent Colors</h4>
-      <div class="small-swatches">
-        @for (color of result().accentColors; track color) {
-          <div class="small-swatch" [style.background]="color"></div>
-        }
       </div>
-    </div>
-    <div class="card half-card fade-in-up">
-      <h4 class="sub-card-title">Neutrals</h4>
-      <div class="small-swatches">
-        @for (color of result().neutralColors; track color) {
-          <div class="small-swatch" [style.background]="color"></div>
+
+      <!-- Recommended palette strip -->
+      <div class="palette-strip">
+        <span class="strip-label">Tu paleta</span>
+        <div class="swatches-row">
+          @for (color of result().recommendedPalette.colors; track color) {
+            <div class="strip-swatch" [style.background]="color" [title]="color">
+              <span class="swatch-tooltip">{{ color }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Metal badges -->
+      <div class="metals-row">
+        @for (metal of result().idealMetals; track metal) {
+          <div class="metal-badge" [class]="'metal-' + metal">
+            <span class="metal-badge-icon">{{ metalIcon(metal) }}</span>
+            <span class="metal-badge-text">{{ metalLabel(metal) }}</span>
+          </div>
         }
       </div>
     </div>
   </div>
 
-  <!-- Avoid Palette -->
-  <div class="card avoid-card fade-in-up">
-    <h3 class="card-title avoid-title">Colors to Avoid</h3>
-    <p class="card-desc">{{ result().avoidPalette.description }}</p>
-    <div class="avoid-swatches">
-      @for (color of result().avoidPalette.colors; track color) {
-        <div class="avoid-swatch" [style.background]="color">
-          <svg class="x-mark" viewBox="0 0 24 24" width="14" height="14">
-            <line x1="18" y1="6" x2="6" y2="18" stroke="white" stroke-width="2.5"/>
-            <line x1="6" y1="6" x2="18" y2="18" stroke="white" stroke-width="2.5"/>
-          </svg>
+  <!-- TWO COLUMNS: Tus Colores vs Evitar -->
+  <div class="two-col fade-in-up">
+    <!-- YOUR COLORS -->
+    <div class="col-card col-good">
+      <div class="col-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        <h4 class="col-title">Tus Colores</h4>
+      </div>
+      <p class="col-desc">{{ result().recommendedPalette.description }}</p>
+      <div class="big-swatches">
+        @for (color of result().recommendedPalette.colors; track color) {
+          <div class="big-swatch" [style.background]="color" [title]="color">
+            <span class="swatch-tooltip">{{ color }}</span>
+          </div>
+        }
+      </div>
+      <div class="accent-neutrals">
+        <div class="sub-group">
+          <span class="sg-label">Acento</span>
+          <div class="sg-swatches">
+            @for (color of result().accentColors; track color) {
+              <div class="sm-swatch" [style.background]="color"></div>
+            }
+          </div>
         </div>
-      }
+        <div class="sub-group">
+          <span class="sg-label">Neutros</span>
+          <div class="sg-swatches">
+            @for (color of result().neutralColors; track color) {
+              <div class="sm-swatch" [style.background]="color"></div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AVOID COLORS -->
+    <div class="col-card col-avoid">
+      <div class="col-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <h4 class="col-title avoid">Colores a Evitar</h4>
+      </div>
+      <p class="col-desc">{{ result().avoidPalette.description }}</p>
+      <div class="big-swatches">
+        @for (color of result().avoidPalette.colors; track color) {
+          <div class="big-swatch avoid-swatch" [style.background]="color">
+            <svg class="x-over" viewBox="0 0 24 24" width="14" height="14">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="white" stroke-width="2.5"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="white" stroke-width="2.5"/>
+            </svg>
+          </div>
+        }
+      </div>
     </div>
   </div>
 
-  <!-- Metals -->
-  <div class="card fade-in-up">
-    <h3 class="card-title">Ideal Metals</h3>
-    <div class="metals-grid">
-      @for (metal of result().idealMetals; track metal) {
-        <div class="metal-chip">
-          <span class="metal-icon">{{ metalIcon(metal) }}</span>
-          <span class="metal-label">{{ metalLabel(metal) }}</span>
-        </div>
-      }
+  <!-- SKIN CHARACTERISTICS INFO STRIP -->
+  <div class="char-strip fade-in-up">
+    <div class="char-strip-header">
+      <h4 class="strip-title">Tus Características de Color</h4>
     </div>
-  </div>
-
-  <!-- Characteristics -->
-  <div class="card fade-in-up">
-    <h3 class="card-title">Your Characteristics</h3>
-    <ul class="characteristics-list">
+    <div class="char-items-row">
       @for (char of result().characteristics; track char) {
-        <li class="characteristic-item">
-          <span class="check-icon">✓</span>
-          <span>{{ char }}</span>
-        </li>
+        <div class="char-chip">
+          <span class="chip-check">&#10003;</span>
+          <span class="chip-text">{{ char }}</span>
+        </div>
       }
-    </ul>
+    </div>
   </div>
 </div>

@@ -1,134 +1,198 @@
 <div class="face-analysis">
   <div class="section-header">
-    <h2 class="section-title font-display">Face Analysis</h2>
-    <p class="section-subtitle">AI-powered facial structure detection</p>
+    <h2 class="section-title">Análisis Facial</h2>
+    <p class="section-subtitle">Detección estructural con visión computacional IA</p>
   </div>
 
-  <!-- Face Shape Card -->
-  <div class="card face-shape-card fade-in-up">
-    <div class="face-shape-content">
-      <div class="face-shape-diagram">
-        <svg viewBox="0 0 120 140" width="120" height="140">
+  <!-- INFOGRAPHIC PANEL -->
+  <div class="infographic-panel fade-in-up">
+
+    <!-- LEFT: Face Shape SVG -->
+    <div class="panel-left">
+      <div class="face-svg-wrapper">
+        <svg viewBox="0 0 200 240" class="face-svg" aria-label="Diagrama forma de rostro">
+          <defs>
+            <radialGradient id="faceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="rgba(201,169,110,0.08)"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </radialGradient>
+          </defs>
+          <ellipse cx="100" cy="120" rx="85" ry="110" fill="url(#faceGlow)"/>
+
           @switch (result().faceShape) {
             @case ('oval') {
-              <ellipse cx="60" cy="70" rx="40" ry="55" fill="none" stroke="#c9a96e" stroke-width="2"/>
-              <line x1="60" y1="15" x2="60" y2="125" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
-              <line x1="20" y1="70" x2="100" y2="70" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+              <ellipse cx="100" cy="120" rx="62" ry="88"
+                fill="none" stroke="#c9a96e" stroke-width="1.5"
+                stroke-dasharray="600" stroke-dashoffset="600"
+                class="face-outline"/>
+              <line x1="100" y1="32" x2="100" y2="208" stroke="rgba(201,169,110,0.25)" stroke-width="1" stroke-dasharray="5 4"/>
+              <line x1="38" y1="120" x2="162" y2="120" stroke="rgba(201,169,110,0.25)" stroke-width="1" stroke-dasharray="5 4"/>
             }
             @case ('round') {
-              <circle cx="60" cy="70" r="48" fill="none" stroke="#c9a96e" stroke-width="2"/>
-              <line x1="60" y1="22" x2="60" y2="118" stroke="rgba(201,169,110,0.3)" stroke-width="1" stroke-dasharray="4,4"/>
+              <circle cx="100" cy="120" r="78"
+                fill="none" stroke="#c9a96e" stroke-width="1.5"
+                stroke-dasharray="490" stroke-dashoffset="490"
+                class="face-outline"/>
+              <line x1="100" y1="42" x2="100" y2="198" stroke="rgba(201,169,110,0.25)" stroke-width="1" stroke-dasharray="5 4"/>
             }
             @case ('square') {
-              <rect x="15" y="15" width="90" height="110" rx="8" ry="8" fill="none" stroke="#c9a96e" stroke-width="2"/>
+              <rect x="32" y="32" width="136" height="176" rx="12" ry="12"
+                fill="none" stroke="#c9a96e" stroke-width="1.5"
+                stroke-dasharray="630" stroke-dashoffset="630"
+                class="face-outline"/>
             }
             @case ('rectangular') {
-              <rect x="22" y="8" width="76" height="124" rx="8" ry="8" fill="none" stroke="#c9a96e" stroke-width="2"/>
+              <rect x="40" y="20" width="120" height="200" rx="12" ry="12"
+                fill="none" stroke="#c9a96e" stroke-width="1.5"
+                stroke-dasharray="650" stroke-dashoffset="650"
+                class="face-outline"/>
             }
             @case ('triangular') {
-              <path d="M 60 10 L 100 125 L 20 125 Z" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M 100 22 L 168 208 L 32 208 Z"
+                fill="none" stroke="#c9a96e" stroke-width="1.5" stroke-linejoin="round"
+                stroke-dasharray="570" stroke-dashoffset="570"
+                class="face-outline"/>
             }
             @case ('heart') {
-              <path d="M 15 30 Q 15 10 35 10 Q 60 10 60 35 Q 60 10 85 10 Q 105 10 105 30 Q 105 55 60 125 Q 15 55 15 30 Z" fill="none" stroke="#c9a96e" stroke-width="2"/>
+              <path d="M 28 56 Q 28 22 58 22 Q 100 22 100 60 Q 100 22 142 22 Q 172 22 172 56 Q 172 100 100 220 Q 28 100 28 56 Z"
+                fill="none" stroke="#c9a96e" stroke-width="1.5"
+                stroke-dasharray="660" stroke-dashoffset="660"
+                class="face-outline"/>
             }
           }
+
+          <!-- Feature dots -->
+          <circle cx="76"  cy="100" r="3" fill="#c9a96e" opacity="0.7" class="feature-dot"/>
+          <circle cx="124" cy="100" r="3" fill="#c9a96e" opacity="0.7" class="feature-dot"/>
+          <circle cx="100" cy="60"  r="3" fill="#c9a96e" opacity="0.6" class="feature-dot"/>
+          <circle cx="100" cy="148" r="3" fill="#c9a96e" opacity="0.6" class="feature-dot"/>
+          <circle cx="72"  cy="148" r="2" fill="#c9a96e" opacity="0.5" class="feature-dot"/>
+          <circle cx="128" cy="148" r="2" fill="#c9a96e" opacity="0.5" class="feature-dot"/>
+
+          <!-- Scan line -->
+          <line x1="20" y1="120" x2="180" y2="120"
+            stroke="rgba(201,169,110,0.4)" stroke-width="1"
+            class="scan-line"/>
+
+          <!-- Corner brackets -->
+          <path d="M 10 32 L 10 18 L 24 18"   stroke="#c9a96e" stroke-width="1.5" fill="none" opacity="0.8" stroke-linecap="round"/>
+          <path d="M 176 18 L 190 18 L 190 32" stroke="#c9a96e" stroke-width="1.5" fill="none" opacity="0.8" stroke-linecap="round"/>
+          <path d="M 10 208 L 10 222 L 24 222" stroke="#c9a96e" stroke-width="1.5" fill="none" opacity="0.8" stroke-linecap="round"/>
+          <path d="M 176 222 L 190 222 L 190 208" stroke="#c9a96e" stroke-width="1.5" fill="none" opacity="0.8" stroke-linecap="round"/>
         </svg>
-        <app-confidence-badge [confidence]="result().faceShapeConfidence" label="Match" />
-      </div>
 
-      <div class="face-shape-info">
-        <div class="shape-name">
-          <span class="label">Face Shape</span>
-          <h3 class="value font-display">{{ faceShapeLabel() }}</h3>
-        </div>
-
-        <div class="metrics-grid">
-          <div class="metric">
-            <span class="metric-label">Age</span>
-            <span class="metric-value">~{{ result().estimatedAge }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Gender</span>
-            <span class="metric-value">{{ genderLabel() }}</span>
-          </div>
-          <div class="metric">
-            <span class="metric-label">Contrast</span>
-            <span class="metric-value">{{ contrastLabel() }}</span>
-          </div>
-        </div>
-
-        <!-- Symmetry meter -->
-        <div class="symmetry-section">
-          <div class="symmetry-header">
-            <span class="label">Facial Symmetry</span>
-            <span class="symmetry-value">{{ result().facialSymmetry }}%</span>
-          </div>
-          <div class="symmetry-bar">
-            <div class="symmetry-fill" [style.width.%]="result().facialSymmetry"></div>
-          </div>
+        <div class="shape-badge">
+          <span class="shape-label-tiny">Forma detectada</span>
+          <span class="shape-name-text">{{ faceShapeLabel() }}</span>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Skin Analysis Card -->
-  <div class="card skin-card fade-in-up">
-    <h3 class="card-title">Skin Analysis</h3>
-    <div class="skin-content">
-      <div class="skin-tone-display">
-        <div class="tone-swatch" [style.background]="skinToneHex()"></div>
-        <div class="tone-info">
-          <span class="label">Skin Tone</span>
-          <span class="tone-name">{{ skinToneLabel() }}</span>
+    <!-- CENTER: Metric rings -->
+    <div class="panel-center">
+      <div class="ring-metric">
+        <svg viewBox="0 0 80 80" class="ring-svg">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#c9a96e" stroke-width="6"
+            stroke-dasharray="201"
+            [attr.stroke-dashoffset]="201 * (1 - result().facialSymmetry / 100)"
+            stroke-linecap="round"
+            transform="rotate(-90 40 40)"
+            style="transition:stroke-dashoffset 1.2s ease"/>
+        </svg>
+        <span class="ring-value">{{ result().facialSymmetry }}%</span>
+        <span class="ring-label">Simetría</span>
+      </div>
+
+      <div class="ring-metric">
+        <svg viewBox="0 0 80 80" class="ring-svg">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#a855f7" stroke-width="6"
+            stroke-dasharray="201"
+            [attr.stroke-dashoffset]="201 * (1 - result().faceShapeConfidence / 100)"
+            stroke-linecap="round"
+            transform="rotate(-90 40 40)"
+            style="transition:stroke-dashoffset 1.2s ease 0.2s"/>
+        </svg>
+        <span class="ring-value ring-purple">{{ result().faceShapeConfidence }}%</span>
+        <span class="ring-label">Confianza</span>
+      </div>
+
+      <div class="ring-metric">
+        <svg viewBox="0 0 80 80" class="ring-svg">
+          <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="6"/>
+          <circle cx="40" cy="40" r="32" fill="none" stroke="#3b82f6" stroke-width="6"
+            stroke-dasharray="201"
+            [attr.stroke-dashoffset]="201 * (1 - result().ageConfidence / 100)"
+            stroke-linecap="round"
+            transform="rotate(-90 40 40)"
+            style="transition:stroke-dashoffset 1.2s ease 0.4s"/>
+        </svg>
+        <span class="ring-value ring-blue">{{ result().ageConfidence }}%</span>
+        <span class="ring-label">Edad ~{{ result().estimatedAge }}</span>
+      </div>
+
+      <!-- Skin tone -->
+      <div class="skin-swatch-block">
+        <div class="skin-dot" [style.background]="skinToneHex()"></div>
+        <div class="skin-info">
+          <span class="skin-tone-name">{{ skinToneLabel() }}</span>
+          <span class="skin-undertone">{{ undertoneLabel() }} undertone</span>
         </div>
       </div>
-
-      <div class="undertone-badge" [class]="result().skinUndertone">
-        <span class="undertone-dot"></span>
-        <span>{{ undertoneLabel() }} Undertone</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Symmetry Circle Card -->
-  <div class="card symmetry-card fade-in-up">
-    <div class="symmetry-circle-container">
-      <svg width="100" height="100" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="36" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="8"/>
-        <circle
-          cx="50" cy="50" r="36"
-          fill="none"
-          stroke="#c9a96e"
-          stroke-width="8"
-          stroke-linecap="round"
-          [attr.stroke-dasharray]="circumference"
-          [attr.stroke-dashoffset]="symmetryDashOffset()"
-          transform="rotate(-90 50 50)"
-          style="transition: stroke-dashoffset 1s ease"
-        />
-        <text x="50" y="54" text-anchor="middle" fill="#f0eff4" font-size="18" font-weight="600">
-          {{ result().facialSymmetry }}
-        </text>
-      </svg>
-      <div class="symmetry-label">
-        <span>Symmetry Score</span>
-        <span class="sub">out of 100</span>
-      </div>
     </div>
 
-    <div class="confidence-details">
-      <div class="confidence-row">
-        <span>Shape Detection</span>
-        <app-confidence-badge [confidence]="result().faceShapeConfidence" />
-      </div>
-      <div class="confidence-row">
-        <span>Age Estimate</span>
-        <app-confidence-badge [confidence]="result().ageConfidence" />
-      </div>
-      <div class="confidence-row">
-        <span>Gender Detection</span>
-        <app-confidence-badge [confidence]="result().genderConfidence" />
+    <!-- RIGHT: Characteristics list -->
+    <div class="panel-right">
+      <h4 class="right-heading">Características</h4>
+      <ul class="char-list">
+        <li class="char-item">
+          <span class="char-key">Género</span>
+          <span class="char-val">{{ genderLabel() }}</span>
+        </li>
+        <li class="char-item">
+          <span class="char-key">Contraste</span>
+          <span class="char-val">{{ contrastLabel() }}</span>
+        </li>
+        <li class="char-item">
+          <span class="char-key">Tono piel</span>
+          <span class="char-val">{{ skinToneLabel() }}</span>
+        </li>
+        <li class="char-item">
+          <span class="char-key">Subtono</span>
+          <span class="char-val">{{ undertoneLabel() }}</span>
+        </li>
+        <li class="char-item">
+          <span class="char-key">Edad aprox.</span>
+          <span class="char-val">~{{ result().estimatedAge }} años</span>
+        </li>
+      </ul>
+
+      <!-- Confidence bars -->
+      <div class="conf-bars">
+        <div class="conf-bar-row">
+          <span class="conf-label">Detección forma</span>
+          <div class="conf-track">
+            <div class="conf-fill cf-gold" [style.width.%]="result().faceShapeConfidence"></div>
+          </div>
+          <span class="conf-pct">{{ result().faceShapeConfidence }}%</span>
+        </div>
+        <div class="conf-bar-row">
+          <span class="conf-label">Estimación edad</span>
+          <div class="conf-track">
+            <div class="conf-fill cf-purple" [style.width.%]="result().ageConfidence"></div>
+          </div>
+          <span class="conf-pct">{{ result().ageConfidence }}%</span>
+        </div>
+        <div class="conf-bar-row">
+          <span class="conf-label">Detección género</span>
+          <div class="conf-track">
+            <div class="conf-fill cf-blue" [style.width.%]="result().genderConfidence"></div>
+          </div>
+          <span class="conf-pct">{{ result().genderConfidence }}%</span>
+        </div>
       </div>
     </div>
+
   </div>
 </div>

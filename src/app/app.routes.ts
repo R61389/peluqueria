@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 import { authGuard, adminGuard, barberGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () => import('./features/landing/landing.component').then(m => m.LandingComponent),
+    pathMatch: 'full',
+  },
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
@@ -36,5 +40,5 @@ export const routes: Routes = [
       },
     ]
   },
-  { path: '**', redirectTo: '/login' }
+  { path: '**', redirectTo: '/' }
 ];
