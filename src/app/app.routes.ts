@@ -34,6 +34,10 @@ export const routes: Routes = [
         path: 'history',
         loadComponent: () => import('./features/history/history.component').then(m => m.HistoryComponent)
       },
+      {
+        path: 'try-on',
+        loadComponent: () => import('./features/try-on/try-on.component').then(m => m.TryOnComponent)
+      },
     ]
   },
   { path: '**', redirectTo: '/login' }
