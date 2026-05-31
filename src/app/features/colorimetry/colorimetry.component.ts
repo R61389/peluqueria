@@ -1,12 +1,11 @@
 import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ColorimetryResult } from '../../core/models/colorimetry.model';
-import { ConfidenceBadgeComponent } from '../../shared/components/confidence-badge/confidence-badge.component';
 
 @Component({
   selector: 'app-colorimetry',
   standalone: true,
-  imports: [CommonModule, ConfidenceBadgeComponent],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './colorimetry.component.html',
   styleUrls: ['./colorimetry.component.scss'],

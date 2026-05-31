@@ -5,11 +5,12 @@
 }
 
 .section-header {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 
   .section-title {
+    font-family: 'Playfair Display', Georgia, serif;
     font-size: 28px;
-    font-weight: 600;
+    font-weight: 700;
     background: linear-gradient(135deg, #c9a96e, #e8c990);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -19,229 +20,361 @@
 
   .section-subtitle {
     color: #9997b0;
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 
-.card {
-  background: #1a1a26;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ── SEASON CARD ── */
+.season-magazine-card {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  padding: 32px;
+
+  &.season-spring  { background: linear-gradient(135deg, rgba(15,12,8,0.98), rgba(40,20,8,0.95)); border-color: rgba(244,164,96,0.3); }
+  &.season-summer  { background: linear-gradient(135deg, rgba(8,10,18,0.98), rgba(20,10,32,0.95)); border-color: rgba(176,196,222,0.3); }
+  &.season-autumn  { background: linear-gradient(135deg, rgba(15,8,4,0.98), rgba(35,12,4,0.95)); border-color: rgba(210,105,30,0.35); }
+  &.season-winter  { background: linear-gradient(135deg, rgba(6,8,16,0.98), rgba(8,6,20,0.95)); border-color: rgba(107,114,128,0.3); }
+}
+
+.season-card-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+
+  .season-spring  & { background: radial-gradient(ellipse 80% 60% at 10% 50%, rgba(244,164,96,0.07), transparent 70%); }
+  .season-summer  & { background: radial-gradient(ellipse 80% 60% at 10% 50%, rgba(176,196,222,0.07), transparent 70%); }
+  .season-autumn  & { background: radial-gradient(ellipse 80% 60% at 10% 50%, rgba(210,105,30,0.09), transparent 70%); }
+  .season-winter  & { background: radial-gradient(ellipse 80% 60% at 10% 50%, rgba(100,100,180,0.07), transparent 70%); }
+}
+
+.season-card-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.season-identity {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  .season-icon-large {
+    font-size: 52px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .season-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+.season-subtype-tag {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #9997b0;
+}
+
+.season-name-large {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #f0eff4;
+  line-height: 1;
+}
+
+.season-confidence {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .conf-track-inline {
+    flex: 0 0 120px;
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .conf-fill-inline {
+    height: 100%;
+    background: linear-gradient(90deg, #c9a96e, #e8c990);
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+
+  .conf-value-inline {
+    font-size: 12px;
+    color: #c9a96e;
+    font-weight: 600;
+  }
+}
+
+/* Palette strip */
+.palette-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .strip-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #5a5870;
+    flex-shrink: 0;
+    width: 60px;
+  }
+}
+
+.swatches-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.strip-swatch {
+  width: 28px;
+  height: 48px;
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+
+  &:hover {
+    transform: scaleY(1.15) translateY(-4px);
+    z-index: 5;
+
+    .swatch-tooltip { opacity: 1; }
+  }
+
+  .swatch-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,15,0.95);
+    color: #f0eff4;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+}
+
+/* Metal badges */
+.metals-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.metal-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid transparent;
+
+  &.metal-gold      { background: rgba(201,169,110,0.12); border-color: rgba(201,169,110,0.3); color: #c9a96e; }
+  &.metal-silver    { background: rgba(200,200,220,0.08); border-color: rgba(200,200,220,0.25); color: #c0c0d0; }
+  &.metal-rose-gold { background: rgba(220,150,130,0.1); border-color: rgba(220,150,130,0.3); color: #e0967a; }
+  &.metal-mixed     { background: rgba(180,130,200,0.1); border-color: rgba(180,130,200,0.3); color: #c084fc; }
+
+  .metal-badge-icon { font-size: 16px; }
+  .metal-badge-text { white-space: nowrap; }
+}
+
+/* ── TWO COLUMNS ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.col-card {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &.col-good   { border-color: rgba(201,169,110,0.15); }
+  &.col-avoid  { border-color: rgba(239,68,68,0.15); }
+}
+
+.col-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.col-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f0eff4;
+
+  &.avoid { color: #f87171; }
+}
+
+.col-desc {
+  font-size: 13px;
+  color: #9997b0;
+  line-height: 1.5;
+}
+
+.big-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.big-swatch {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+  &:hover {
+    transform: scale(1.12);
+    z-index: 5;
+
+    .swatch-tooltip { opacity: 1; }
+  }
+
+  .swatch-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(10,10,15,0.95);
+    color: #f0eff4;
+    font-size: 10px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+}
+
+.avoid-swatch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: rgba(239,68,68,0.25);
+  }
+
+  .x-over {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.accent-neutrals {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.sub-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .sg-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #5a5870;
+  }
+}
+
+.sg-swatches {
+  display: flex;
+  gap: 6px;
+
+  .sm-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+}
+
+/* ── CHARACTERISTICS STRIP ── */
+.char-strip {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
   border-radius: 20px;
   padding: 24px;
 }
 
-.card-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 18px;
-  color: #f0eff4;
-  margin-bottom: 12px;
-}
-
-.card-desc {
-  font-size: 13px;
-  color: #9997b0;
+.char-strip-header {
   margin-bottom: 16px;
-  line-height: 1.5;
-}
 
-.season-card {
-  &.spring {
-    background: linear-gradient(135deg, rgba(244, 164, 96, 0.15), rgba(255, 215, 0, 0.08));
-    border-color: rgba(244, 164, 96, 0.3);
-  }
-  &.summer {
-    background: linear-gradient(135deg, rgba(176, 196, 222, 0.15), rgba(221, 160, 221, 0.08));
-    border-color: rgba(176, 196, 222, 0.3);
-  }
-  &.autumn {
-    background: linear-gradient(135deg, rgba(139, 69, 19, 0.2), rgba(210, 105, 30, 0.1));
-    border-color: rgba(210, 105, 30, 0.3);
-  }
-  &.winter {
-    background: linear-gradient(135deg, rgba(107, 114, 128, 0.15), rgba(75, 0, 130, 0.1));
-    border-color: rgba(107, 114, 128, 0.3);
-  }
-
-  .season-main {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-
-    .season-icon {
-      font-size: 56px;
-      line-height: 1;
-    }
-
-    .season-info {
-      .season-subtype {
-        font-size: 12px;
-        color: #9997b0;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        display: block;
-        margin-bottom: 4px;
-      }
-
-      .season-name {
-        font-size: 28px;
-        color: #f0eff4;
-        margin-bottom: 12px;
-      }
-    }
+  .strip-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #f0eff4;
   }
 }
 
-.color-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-
-  .color-swatch {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    position: relative;
-    cursor: pointer;
-    transition: transform 0.2s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      transform: scale(1.15);
-      z-index: 10;
-
-      .color-tooltip {
-        opacity: 1;
-      }
-    }
-
-    .color-tooltip {
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(10, 10, 15, 0.95);
-      color: #f0eff4;
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 6px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-  }
-}
-
-.colors-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.sub-card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #9997b0;
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.small-swatches {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-
-  .small-swatch {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  }
-}
-
-.avoid-card {
-  border-color: rgba(239, 68, 68, 0.2);
-
-  .avoid-title {
-    color: #f87171;
-  }
-}
-
-.avoid-swatches {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-
-  .avoid-swatch {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    opacity: 0.7;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      background: rgba(239, 68, 68, 0.3);
-    }
-
-    .x-mark {
-      position: relative;
-      z-index: 1;
-    }
-  }
-}
-
-.metals-grid {
+.char-items-row {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-
-  .metal-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 20px;
-    padding: 8px 14px;
-
-    .metal-icon {
-      font-size: 16px;
-    }
-
-    .metal-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: #f0eff4;
-    }
-  }
 }
 
-.characteristics-list {
-  list-style: none;
+.char-chip {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  gap: 7px;
+  background: rgba(201,169,110,0.06);
+  border: 1px solid rgba(201,169,110,0.15);
+  border-radius: 20px;
+  padding: 6px 14px;
 
-  .characteristic-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 14px;
-    color: #9997b0;
+  .chip-check {
+    color: #c9a96e;
+    font-weight: 700;
+    font-size: 12px;
+  }
 
-    .check-icon {
-      color: #c9a96e;
-      font-weight: 700;
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
+  .chip-text {
+    font-size: 13px;
+    color: #f0eff4;
   }
 }
