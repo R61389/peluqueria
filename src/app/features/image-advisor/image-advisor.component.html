@@ -172,6 +172,12 @@
             @case ('hair') {
               <app-hairstyle [result]="hairstyleResult()!" />
             }
+            @case ('tryon') {
+              <app-hairstyle-tryon
+                [preloadedPhotoUrl]="faceAnalysisResult()?.imageData ?? null"
+                [preloadedAnalysis]="faceAnalysisResult()"
+              />
+            }
             @case ('style') {
               <app-styling
                 [faceAnalysis]="faceAnalysisResult()!"

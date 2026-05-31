@@ -26,9 +26,10 @@ import { ColorimetryComponent } from '../colorimetry/colorimetry.component';
 import { HairstyleComponent } from '../hairstyle/hairstyle.component';
 import { StylingComponent } from '../styling/styling.component';
 import { InfographicComponent } from '../infographic/infographic.component';
+import { HairstyleTryonComponent } from '../try-on/hairstyle-tryon/hairstyle-tryon.component';
 
 export type Step = 'upload' | 'analyze' | 'results';
-export type ResultTab = 'face' | 'color' | 'hair' | 'style' | 'report';
+export type ResultTab = 'face' | 'color' | 'hair' | 'tryon' | 'style' | 'report';
 
 @Component({
   selector: 'app-image-advisor',
@@ -43,6 +44,7 @@ export type ResultTab = 'face' | 'color' | 'hair' | 'style' | 'report';
     HairstyleComponent,
     StylingComponent,
     InfographicComponent,
+    HairstyleTryonComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './image-advisor.component.html',
@@ -79,6 +81,7 @@ export class ImageAdvisorComponent {
     { id: 'face', label: 'Face', icon: '◈' },
     { id: 'color', label: 'Color', icon: '◉' },
     { id: 'hair', label: 'Hair', icon: '◎' },
+    { id: 'tryon', label: 'Try-On IA', icon: '✦' },
     { id: 'style', label: 'Style', icon: '◇' },
     { id: 'report', label: 'Report', icon: '◆' },
   ];

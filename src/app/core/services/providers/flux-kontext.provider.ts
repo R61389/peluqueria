@@ -11,7 +11,9 @@ export class FluxKontextProvider implements ImageGenerationProvider {
   readonly providerName = 'flux-kontext' as const;
 
   private readonly MODEL    = 'black-forest-labs/flux-kontext-pro';
-  private readonly API_BASE = 'https://api.replicate.com/v1';
+  // En desarrollo usa el proxy de Angular (proxy.conf.json → api.replicate.com)
+  // En producción reemplaza con un backend proxy propio
+  private readonly API_BASE = '/replicate-api/v1';
 
   async generate(
     request: HairstyleGenerationRequest,

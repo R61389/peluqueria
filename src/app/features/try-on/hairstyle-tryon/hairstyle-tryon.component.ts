@@ -1,6 +1,7 @@
 import {
   Component, signal, computed, ViewChild, ElementRef,
   AfterViewInit, ChangeDetectionStrategy, inject, OnDestroy,
+  input, effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -564,6 +565,32 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
 
   readonly aiService      = inject(HairstyleAiService);
   private readonly faceAnalysis = inject(FaceAnalysisService);
+
+  // ── Signal inputs — reciben foto y análisis ya hechos desde la Asesoría IA ─
+  readonly preloadedPhotoUrl = input<string | null>(null);
+  readonly preloadedAnalysis = input<FaceAnalysisResult | null>(null);
+
+  constructor() {
+    // Cuando la Asesoría IA pasa una foto, la precargamos sin volver a subir
+    effect(() => {
+      const url = this.preloadedPhotoUrl();
+      if (url && url !== this.photoUrl()) {
+        this.photoUrl.set(url);
+        this.aiService.reset();
+        this.analysisResult.set(null);
+        this.analysisError.set('');
+      }
+    });
+    // Cuando pasa el análisis ya hecho, lo reutilizamos directamente
+    effect(() => {
+      const result = this.preloadedAnalysis();
+      if (result) {
+        this.analysisResult.set(result);
+        if (result.gender === 'male')   this.genderFilter.set('male');
+        if (result.gender === 'female') this.genderFilter.set('female');
+      }
+    });
+  }
 
   // ── State ─────────────────────────────────────────────────────────────────
   photoUrl       = signal<string | null>(null);

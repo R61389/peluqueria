@@ -1,0 +1,14 @@
+{
+  "/replicate-api": {
+    "target": "https://api.replicate.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/replicate-api": ""
+    },
+    "logLevel": "warn",
+    "headers": {
+      "Connection": "keep-alive"
+    }
+  }
+}
