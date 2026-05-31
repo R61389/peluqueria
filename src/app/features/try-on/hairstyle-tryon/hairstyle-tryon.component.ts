@@ -1,520 +1,576 @@
 import {
   Component,
   signal,
+  computed,
   ViewChild,
   ElementRef,
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   inject,
-  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as faceapi from 'face-api.js';
 
-interface Landmark { x: number; y: number; }
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+type Gender = 'hombre' | 'mujer' | 'unisex';
+type Category = 'todos' | 'corto' | 'medio' | 'largo' | 'especial';
 
 interface HairstyleOption {
   id: string;
   name: string;
-  category: 'corto' | 'medio' | 'largo' | 'rizado' | 'fade';
-  icon: string;
-  description: string;
+  gender: Gender[];
+  category: Category;
+  tags: string[];
+  draw: (ctx: CanvasRenderingContext2D, f: FaceMetrics, color: string) => void;
 }
 
-const HAIRSTYLES: HairstyleOption[] = [
-  { id: 'pixie',      name: 'Pixie Cut',        category: 'corto',  icon: '✂️', description: 'Muy corto, moderno' },
-  { id: 'undercut',   name: 'Undercut',          category: 'fade',   icon: '⚡', description: 'Fade con volumen arriba' },
-  { id: 'classic',    name: 'Clásico con raya',  category: 'corto',  icon: '💼', description: 'Raya lateral elegante' },
-  { id: 'bob',        name: 'Bob Liso',          category: 'medio',  icon: '〰️', description: 'A la altura del cuello' },
-  { id: 'waves',      name: 'Ondas',             category: 'medio',  icon: '🌊', description: 'Mediano con ondas' },
-  { id: 'long',       name: 'Liso Largo',        category: 'largo',  icon: '💫', description: 'Largo y liso' },
-  { id: 'curly',      name: 'Rizado Natural',    category: 'rizado', icon: '🌀', description: 'Rizos definidos' },
-  { id: 'afro',       name: 'Afro',              category: 'rizado', icon: '☁️', description: 'Volumen esférico' },
-  { id: 'ponytail',   name: 'Cola Alta',         category: 'largo',  icon: '🎀', description: 'Recogido en lo alto' },
-];
-
-interface FaceData {
-  scaleX: number;
-  scaleY: number;
-  faceX: number;
-  faceY: number;
-  faceW: number;
-  faceH: number;
-  landmarks: Landmark[];
-  // derived
-  foreheadY: number;
-  headTopY: number;
-  leftTempleX: number;
-  rightTempleX: number;
-  centerX: number;
+interface FaceMetrics {
+  cx: number;       // face center X
+  foreheadY: number;// top of forehead (where hair begins on face)
+  headTopY: number; // estimated top of skull
+  leftX: number;    // left temple
+  rightX: number;   // right temple
+  chinY: number;    // bottom of face
+  faceW: number;    // face width
+  faceH: number;    // face height
 }
 
-function parseLandmarks(pts: { x: number; y: number }[], sx: number, sy: number): Landmark[] {
-  return pts.map(p => ({ x: p.x * sx, y: p.y * sy }));
-}
+interface ColorOption { label: string; value: string; }
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
+// ─── Color utilities ─────────────────────────────────────────────────────────
+
+function hexRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.replace('#', ''), 16);
-  return { r: (n >> 16) & 0xff, g: (n >> 8) & 0xff, b: n & 0xff };
+  return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }
-
-function lighten(hex: string, amount: number): string {
-  const { r, g, b } = hexToRgb(hex);
-  const mix = (v: number) => Math.min(255, Math.round(v + (255 - v) * amount));
-  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+function lt(hex: string, a: number): string {
+  const [r, g, b] = hexRgb(hex);
+  return `rgb(${Math.min(255, r + (255 - r) * a | 0)},${Math.min(255, g + (255 - g) * a | 0)},${Math.min(255, b + (255 - b) * a | 0)})`;
 }
-
-function darken(hex: string, amount: number): string {
-  const { r, g, b } = hexToRgb(hex);
-  const mix = (v: number) => Math.max(0, Math.round(v * (1 - amount)));
-  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+function dk(hex: string, a: number): string {
+  const [r, g, b] = hexRgb(hex);
+  return `rgb(${r * (1 - a) | 0},${g * (1 - a) | 0},${b * (1 - a) | 0})`;
 }
-
-// ─── Hair drawing functions ─────────────────────────────────────────────────
-
-function drawHair(ctx: CanvasRenderingContext2D, face: FaceData, styleId: string, color: string): void {
-  ctx.save();
-  switch (styleId) {
-    case 'pixie':      drawPixie(ctx, face, color); break;
-    case 'undercut':   drawUndercut(ctx, face, color); break;
-    case 'classic':    drawClassic(ctx, face, color); break;
-    case 'bob':        drawBob(ctx, face, color); break;
-    case 'waves':      drawWaves(ctx, face, color); break;
-    case 'long':       drawLongStraight(ctx, face, color); break;
-    case 'curly':      drawCurly(ctx, face, color); break;
-    case 'afro':       drawAfro(ctx, face, color); break;
-    case 'ponytail':   drawPonytail(ctx, face, color); break;
-  }
-  ctx.restore();
-}
-
-function hairGrad(ctx: CanvasRenderingContext2D, x: number, yTop: number, yBot: number, color: string): CanvasGradient {
-  const g = ctx.createLinearGradient(x, yTop, x, yBot);
-  g.addColorStop(0,   lighten(color, 0.35));
-  g.addColorStop(0.3, color);
-  g.addColorStop(0.7, color);
-  g.addColorStop(1,   darken(color, 0.35));
+function vGrad(ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, col: string): CanvasGradient {
+  const g = ctx.createLinearGradient(x, y1, x, y2);
+  g.addColorStop(0, lt(col, 0.28)); g.addColorStop(0.4, col);
+  g.addColorStop(0.75, col); g.addColorStop(1, dk(col, 0.35));
   return g;
 }
 
-function addStrands(ctx: CanvasRenderingContext2D, face: FaceData, color: string,
-                    count: number, startY: number, endY: number, spreadX: number, curve = 0): void {
-  ctx.lineWidth = 1.2;
+// ─── Hairstyle drawing functions ─────────────────────────────────────────────
+
+function cap(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string, pad = 0.12): void {
+  const { cx, headTopY: ht, foreheadY: fy, leftX, rightX, faceW: fw, faceH: fh } = f;
+  ctx.fillStyle = vGrad(ctx, cx, ht, fy, col);
+  ctx.beginPath();
+  ctx.moveTo(leftX - fw * pad, fy + fh * 0.02);
+  ctx.bezierCurveTo(leftX - fw * pad, ht + fw * 0.1, cx - fw * 0.55, ht - fw * 0.05, cx, ht - fw * 0.06);
+  ctx.bezierCurveTo(cx + fw * 0.55, ht - fw * 0.05, rightX + fw * pad, ht + fw * 0.1, rightX + fw * pad, fy + fh * 0.02);
+  ctx.closePath(); ctx.fill();
+}
+
+function strands(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string,
+    n: number, fromY: number, toY: number, spreadW: number, curve = 0): void {
+  ctx.lineWidth = 1.1;
+  for (let i = 0; i < n; i++) {
+    const t = i / (n - 1);
+    const x = f.cx - spreadW / 2 + spreadW * t;
+    const jt = (Math.random() - 0.5) * f.faceW * 0.03;
+    ctx.strokeStyle = t < 0.5 ? lt(col, 0.12) : dk(col, 0.08);
+    ctx.beginPath();
+    ctx.moveTo(x + jt, fromY);
+    ctx.bezierCurveTo(
+      x + jt + curve * (t - 0.5) * 2, fromY + (toY - fromY) * 0.38,
+      x + jt + curve * (t - 0.5) * 1.4, fromY + (toY - fromY) * 0.72,
+      x + jt + curve * (t - 0.5), toY);
+    ctx.stroke();
+  }
+}
+
+// ─── Individual style draw functions ─────────────────────────────────────────
+
+function drawBuzzCut(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  cap(ctx, f, col, 0.04);
+  // Stubble fade on sides
+  for (let i = 0; i < 3; i++) {
+    const [r, g, b] = hexRgb(col);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.18 - i * 0.04})`;
+    const yy = f.foreheadY + f.faceH * (0.12 + i * 0.08);
+    ctx.fillRect(f.leftX - f.faceW * 0.1, yy, f.faceW * 0.1, f.faceH * 0.07);
+    ctx.fillRect(f.rightX, yy, f.faceW * 0.1, f.faceH * 0.07);
+  }
+}
+
+function drawFadeUndercut(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, leftX: lx, rightX: rx, faceW: fw, faceH: fh } = f;
+  const topW = fw * 0.62;
+  // Top volume
+  const gRad = ctx.createRadialGradient(cx - fw * 0.15, ht, fw * 0.04, cx, ht + fw * 0.06, fw * 0.55);
+  gRad.addColorStop(0, lt(col, 0.38)); gRad.addColorStop(0.5, col); gRad.addColorStop(1, dk(col, 0.28));
+  ctx.fillStyle = gRad;
+  ctx.beginPath();
+  ctx.ellipse(cx, ht + fw * 0.04, topW / 2, fw * 0.36, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Swept top
+  ctx.fillStyle = dk(col, 0.1);
+  ctx.beginPath();
+  ctx.moveTo(cx - topW / 2, fy + fh * 0.02);
+  ctx.bezierCurveTo(cx - topW * 0.55, ht, cx + topW * 0.05, ht - fw * 0.22, cx + topW / 2, fy - fh * 0.04);
+  ctx.bezierCurveTo(cx + topW * 0.28, fy + fh * 0.06, cx, fy + fh * 0.08, cx - topW / 2, fy + fh * 0.02);
+  ctx.fill();
+  // Fade bands
+  for (let i = 0; i < 4; i++) {
+    const [r, g, b] = hexRgb(col);
+    const yy = fy + fh * (0.2 + i * 0.06);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.22 - i * 0.05})`;
+    ctx.fillRect(lx - fw * 0.14, yy, fw * 0.14, fh * 0.055);
+    ctx.fillRect(rx, yy, fw * 0.14, fh * 0.055);
+  }
+  strands(ctx, f, col, 28, ht - fw * 0.02, fy, topW, -fw * 0.22);
+}
+
+function drawPompadour(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, leftX: lx, rightX: rx, faceW: fw, faceH: fh } = f;
+  cap(ctx, f, col, 0.08);
+  // Pompadour volume — swept forward
+  const pGrad = ctx.createLinearGradient(cx, ht - fw * 0.3, cx, fy);
+  pGrad.addColorStop(0, lt(col, 0.35)); pGrad.addColorStop(1, dk(col, 0.12));
+  ctx.fillStyle = pGrad;
+  ctx.beginPath();
+  ctx.moveTo(lx - fw * 0.06, fy + fh * 0.02);
+  ctx.bezierCurveTo(lx - fw * 0.08, ht, cx - fw * 0.35, ht - fw * 0.32, cx, ht - fw * 0.35);
+  ctx.bezierCurveTo(cx + fw * 0.35, ht - fw * 0.32, rx + fw * 0.08, ht, rx + fw * 0.06, fy + fh * 0.02);
+  ctx.bezierCurveTo(rx - fw * 0.1, fy - fh * 0.06, lx + fw * 0.1, fy - fh * 0.06, lx - fw * 0.06, fy + fh * 0.02);
+  ctx.fill();
+  strands(ctx, f, col, 22, ht - fw * 0.32, fy, fw * 1.05, fw * 0.18);
+}
+
+function drawTexturedCrop(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx } = f;
+  cap(ctx, f, col, 0.1);
+  // Textured fringe
+  const fringeW = fw * 0.85;
+  for (let i = 0; i < 12; i++) {
+    const t = i / 11;
+    const x = cx - fringeW / 2 + fringeW * t;
+    const tipLen = fh * (0.08 + Math.sin(t * Math.PI * 3) * 0.04);
+    ctx.fillStyle = i % 2 === 0 ? col : dk(col, 0.15);
+    ctx.beginPath();
+    ctx.moveTo(x - fw * 0.035, fy + fh * 0.01);
+    ctx.bezierCurveTo(x - fw * 0.02, fy - tipLen * 0.3, x + fw * 0.02, fy - tipLen * 0.3, x + fw * 0.035, fy + fh * 0.01);
+    ctx.lineTo(x + fw * 0.02, fy + tipLen);
+    ctx.quadraticCurveTo(x, fy + tipLen * 1.1, x - fw * 0.02, fy + tipLen);
+    ctx.closePath(); ctx.fill();
+  }
+  // Side fade
+  for (let i = 0; i < 3; i++) {
+    const [r, g, b] = hexRgb(col);
+    ctx.fillStyle = `rgba(${r},${g},${b},${0.2 - i * 0.05})`;
+    ctx.fillRect(lx - fw * 0.12, fy + fh * (0.18 + i * 0.07), fw * 0.12, fh * 0.055);
+    ctx.fillRect(rx, fy + fh * (0.18 + i * 0.07), fw * 0.12, fh * 0.055);
+  }
+}
+
+function drawQuiff(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, leftX: lx, rightX: rx, faceW: fw, faceH: fh } = f;
+  cap(ctx, f, col, 0.08);
+  // Quiff: raised section at front center
+  const qGrad = vGrad(ctx, cx, ht - fw * 0.25, fy, col);
+  ctx.fillStyle = qGrad;
+  ctx.beginPath();
+  ctx.moveTo(cx - fw * 0.28, fy + fh * 0.02);
+  ctx.bezierCurveTo(cx - fw * 0.3, ht - fw * 0.18, cx - fw * 0.15, ht - fw * 0.3, cx, ht - fw * 0.28);
+  ctx.bezierCurveTo(cx + fw * 0.15, ht - fw * 0.3, cx + fw * 0.3, ht - fw * 0.18, cx + fw * 0.28, fy + fh * 0.02);
+  ctx.closePath(); ctx.fill();
+  // Highlight on quiff peak
+  const hg = ctx.createRadialGradient(cx, ht - fw * 0.22, 0, cx, ht - fw * 0.2, fw * 0.22);
+  hg.addColorStop(0, 'rgba(255,255,255,0.22)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hg; ctx.fill();
+}
+
+function drawCaesarCut(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, foreheadY: fy, faceW: fw, faceH: fh } = f;
+  cap(ctx, f, col, 0.08);
+  // Horizontal fringe across forehead
+  ctx.fillStyle = dk(col, 0.08);
+  ctx.beginPath();
+  ctx.moveTo(cx - fw * 0.52, fy + fh * 0.01);
+  ctx.bezierCurveTo(cx - fw * 0.52, fy + fh * 0.12, cx + fw * 0.52, fy + fh * 0.12, cx + fw * 0.52, fy + fh * 0.01);
+  ctx.closePath(); ctx.fill();
+  strands(ctx, f, col, 16, fy - fh * 0.05, fy + fh * 0.1, fw * 1.0, 0);
+}
+
+function drawDreadlocks(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx } = f;
+  const dreadLen = fh * 0.55;
+  const count = 14;
+  cap(ctx, f, col, 0.1);
   for (let i = 0; i < count; i++) {
     const t = i / (count - 1);
-    const x = face.centerX - spreadX / 2 + spreadX * t;
-    const jitter = (Math.random() - 0.5) * face.faceW * 0.04;
-    ctx.strokeStyle = t < 0.5 ? lighten(color, 0.15) : darken(color, 0.1);
+    const x = lx - fw * 0.08 + (rx - lx + fw * 0.16) * t;
+    const dW = fw * 0.048;
+    const len = dreadLen * (0.7 + Math.sin(t * Math.PI) * 0.45);
+    const sY = fy + fh * 0.04;
+    const eY = sY + len;
+    const g = ctx.createLinearGradient(x, sY, x, eY);
+    g.addColorStop(0, lt(col, 0.15)); g.addColorStop(0.5, col); g.addColorStop(1, dk(col, 0.42));
+    ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.moveTo(x + jitter, startY);
-    ctx.bezierCurveTo(
-      x + jitter + curve * (t - 0.5) * 2,
-      startY + (endY - startY) * 0.4,
-      x + jitter + curve * (t - 0.5) * 1.5,
-      startY + (endY - startY) * 0.75,
-      x + jitter + curve * (t - 0.5),
-      endY
-    );
+    ctx.moveTo(x - dW / 2, sY);
+    // zigzag dread shape
+    for (let j = 0; j < 5; j++) {
+      const yy = sY + (eY - sY) * (j + 1) / 5;
+      const xOff = (j % 2 === 0 ? 1 : -1) * dW * 0.35;
+      ctx.lineTo(x + xOff + dW / 2, yy);
+      ctx.lineTo(x + xOff - dW / 2, yy);
+    }
+    ctx.lineTo(x - dW / 2, sY);
+    ctx.fill();
+    // Band rings
+    for (let j = 1; j < 5; j++) {
+      const yy = sY + (eY - sY) * j / 5;
+      ctx.fillStyle = dk(col, 0.5);
+      ctx.fillRect(x - dW / 2, yy - 1.5, dW, 3);
+    }
+  }
+}
+
+function drawPixie(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  cap(ctx, f, col, 0.06);
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh } = f;
+  // Short wispy side strands
+  strands(ctx, f, col, 16, ht + fw * 0.05, fy + fh * 0.06, fw * 1.12, fw * 0.06);
+  // Side-swept fringe
+  for (let i = 0; i < 8; i++) {
+    const t = i / 7;
+    ctx.strokeStyle = t > 0.4 ? dk(col, 0.12) : lt(col, 0.1);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(cx - fw * 0.28 + fw * 0.52 * t, fy - fh * 0.02);
+    ctx.quadraticCurveTo(cx - fw * 0.15 + fw * 0.3 * t, fy + fh * 0.06, cx + fw * 0.35 - fw * 0.4 * t, fy + fh * 0.04);
     ctx.stroke();
   }
 }
 
-function drawPixie(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, foreheadY, faceW, leftTempleX, rightTempleX } = f;
-  const pad = faceW * 0.12;
-
-  // Filled skull cap
-  const grad = ctx.createRadialGradient(centerX, headTopY + faceW * 0.1, faceW * 0.05, centerX, headTopY + faceW * 0.1, faceW * 0.65);
-  grad.addColorStop(0, lighten(color, 0.3));
-  grad.addColorStop(1, darken(color, 0.2));
-
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - pad, foreheadY + f.faceH * 0.02);
-  ctx.bezierCurveTo(
-    leftTempleX - pad, headTopY + faceW * 0.12,
-    centerX - faceW * 0.5, headTopY,
-    centerX, headTopY - faceW * 0.05
-  );
-  ctx.bezierCurveTo(
-    centerX + faceW * 0.5, headTopY,
-    rightTempleX + pad, headTopY + faceW * 0.12,
-    rightTempleX + pad, foreheadY + f.faceH * 0.02
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // Side wisps
-  addStrands(ctx, f, color, 20, headTopY, foreheadY + f.faceH * 0.05,
-    rightTempleX - leftTempleX + pad * 2, faceW * 0.08);
-}
-
-function drawUndercut(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, foreheadY, faceW, faceH, leftTempleX, rightTempleX } = f;
-  const sideTop = foreheadY + faceH * 0.25;
-
-  // Volume on top
-  const topW = faceW * 0.65;
-  const grad = hairGrad(ctx, centerX, headTopY - faceW * 0.15, foreheadY, color);
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(centerX, headTopY + faceW * 0.02, topW / 2, faceW * 0.38, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Swept volume
-  ctx.fillStyle = darken(color, 0.12);
-  ctx.beginPath();
-  ctx.moveTo(centerX - topW / 2, foreheadY + faceH * 0.02);
-  ctx.bezierCurveTo(
-    centerX - topW * 0.6, headTopY, centerX + topW * 0.1, headTopY - faceW * 0.25, centerX + topW / 2, foreheadY - faceH * 0.05
-  );
-  ctx.bezierCurveTo(centerX + topW * 0.3, foreheadY + faceH * 0.05, centerX, foreheadY + faceH * 0.07, centerX - topW / 2, foreheadY + faceH * 0.02);
-  ctx.fill();
-
-  // Side fade - very short stubble bands
-  for (let i = 0; i < 4; i++) {
-    const yy = sideTop + i * faceH * 0.06;
-    const alpha = 0.2 - i * 0.04;
-    ctx.fillStyle = `rgba(${hexToRgb(color).r},${hexToRgb(color).g},${hexToRgb(color).b},${alpha})`;
-    ctx.fillRect(leftTempleX - faceW * 0.14, yy, faceW * 0.14, faceH * 0.055);
-    ctx.fillRect(rightTempleX, yy, faceW * 0.14, faceH * 0.055);
-  }
-
-  addStrands(ctx, f, color, 30, headTopY - faceW * 0.05, foreheadY, topW, -faceW * 0.25);
-}
-
-function drawClassic(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, foreheadY, faceW, faceH, leftTempleX, rightTempleX } = f;
-  const parting = centerX - faceW * 0.1;
-
-  const grad = hairGrad(ctx, centerX, headTopY, foreheadY, color);
-  ctx.fillStyle = grad;
-
-  // Main cap
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - faceW * 0.1, foreheadY + faceH * 0.02);
-  ctx.bezierCurveTo(leftTempleX - faceW * 0.1, headTopY, centerX - faceW * 0.5, headTopY - faceW * 0.05, centerX, headTopY - faceW * 0.08);
-  ctx.bezierCurveTo(centerX + faceW * 0.5, headTopY - faceW * 0.05, rightTempleX + faceW * 0.1, headTopY, rightTempleX + faceW * 0.1, foreheadY + faceH * 0.02);
-  ctx.closePath();
-  ctx.fill();
-
-  // Parting highlight
-  const pGrad = ctx.createLinearGradient(parting - 6, foreheadY, parting + 6, foreheadY);
-  pGrad.addColorStop(0, 'rgba(255,255,255,0)');
-  pGrad.addColorStop(0.5, 'rgba(255,255,255,0.18)');
-  pGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = pGrad;
-  ctx.fillRect(parting - 6, headTopY, 12, foreheadY - headTopY + faceH * 0.05);
-
-  // Swept strands left side
-  for (let i = 0; i < 18; i++) {
-    const t = i / 17;
-    const sx = parting - t * faceW * 0.55;
-    const sy = headTopY + (foreheadY - headTopY) * 0.2;
-    const ex = leftTempleX - faceW * 0.12 + t * faceW * 0.3;
-    const ey = foreheadY + faceH * 0.02;
-    ctx.strokeStyle = darken(color, 0.05 + t * 0.1);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo((sx + ex) / 2, (sy + ey) / 2 - faceH * 0.02, ex, ey);
-    ctx.stroke();
-  }
-
-  // Swept strands right side
-  for (let i = 0; i < 18; i++) {
-    const t = i / 17;
-    const sx = parting + t * faceW * 0.55;
-    const sy = headTopY + (foreheadY - headTopY) * 0.2;
-    const ex = rightTempleX + faceW * 0.12 - t * faceW * 0.3;
-    const ey = foreheadY + faceH * 0.02;
-    ctx.strokeStyle = darken(color, 0.05 + t * 0.1);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo((sx + ex) / 2, (sy + ey) / 2 - faceH * 0.02, ex, ey);
-    ctx.stroke();
-  }
-}
-
-function drawBob(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, foreheadY, faceW, faceH, faceX, faceY, leftTempleX, rightTempleX } = f;
-  const bobBottom = faceY + faceH * 1.1;
-  const padX = faceW * 0.22;
-
-  // Side curtain left
-  const gLeft = ctx.createLinearGradient(leftTempleX - padX, foreheadY, leftTempleX, bobBottom);
-  gLeft.addColorStop(0, lighten(color, 0.2));
-  gLeft.addColorStop(1, darken(color, 0.3));
-  ctx.fillStyle = gLeft;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - padX, foreheadY + faceH * 0.05);
-  ctx.bezierCurveTo(leftTempleX - padX - faceW * 0.08, faceY + faceH * 0.5, leftTempleX - padX - faceW * 0.05, faceY + faceH * 0.85, leftTempleX - padX + faceW * 0.08, bobBottom);
-  ctx.lineTo(leftTempleX + faceW * 0.06, bobBottom - faceH * 0.12);
-  ctx.lineTo(leftTempleX, foreheadY + faceH * 0.12);
-  ctx.closePath();
-  ctx.fill();
-
-  // Side curtain right
-  const gRight = ctx.createLinearGradient(rightTempleX + padX, foreheadY, rightTempleX, bobBottom);
-  gRight.addColorStop(0, lighten(color, 0.2));
-  gRight.addColorStop(1, darken(color, 0.3));
-  ctx.fillStyle = gRight;
-  ctx.beginPath();
-  ctx.moveTo(rightTempleX + padX, foreheadY + faceH * 0.05);
-  ctx.bezierCurveTo(rightTempleX + padX + faceW * 0.08, faceY + faceH * 0.5, rightTempleX + padX + faceW * 0.05, faceY + faceH * 0.85, rightTempleX + padX - faceW * 0.08, bobBottom);
-  ctx.lineTo(rightTempleX - faceW * 0.06, bobBottom - faceH * 0.12);
-  ctx.lineTo(rightTempleX, foreheadY + faceH * 0.12);
-  ctx.closePath();
-  ctx.fill();
-
-  // Top cap
-  const capGrad = hairGrad(ctx, centerX, headTopY, foreheadY, color);
-  ctx.fillStyle = capGrad;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - padX, foreheadY + faceH * 0.05);
-  ctx.bezierCurveTo(leftTempleX - padX, headTopY + faceW * 0.05, centerX - faceW * 0.55, headTopY - faceW * 0.05, centerX, headTopY - faceW * 0.06);
-  ctx.bezierCurveTo(centerX + faceW * 0.55, headTopY - faceW * 0.05, rightTempleX + padX, headTopY + faceW * 0.05, rightTempleX + padX, foreheadY + faceH * 0.05);
-  ctx.lineTo(rightTempleX, foreheadY + faceH * 0.12);
-  ctx.lineTo(leftTempleX, foreheadY + faceH * 0.12);
-  ctx.closePath();
-  ctx.fill();
-
-  // Strands
-  addStrands(ctx, f, color, 28, headTopY, bobBottom, rightTempleX - leftTempleX + padX * 2, faceW * 0.05);
-
-  // Bottom straight edge with slight inward curve
-  ctx.strokeStyle = darken(color, 0.2);
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - padX + faceW * 0.08, bobBottom);
-  ctx.quadraticCurveTo(centerX, bobBottom + faceH * 0.02, rightTempleX + padX - faceW * 0.08, bobBottom);
-  ctx.stroke();
-}
-
-function drawWaves(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, faceW, faceH, faceX, faceY, foreheadY, leftTempleX, rightTempleX } = f;
-  const waveBottom = faceY + faceH * 1.35;
-  const padX = faceW * 0.28;
-
-  // Top cap
-  const capGrad = hairGrad(ctx, centerX, headTopY, foreheadY, color);
-  ctx.fillStyle = capGrad;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - padX, foreheadY + faceH * 0.05);
-  ctx.bezierCurveTo(leftTempleX - padX, headTopY, centerX - faceW * 0.6, headTopY - faceW * 0.08, centerX, headTopY - faceW * 0.1);
-  ctx.bezierCurveTo(centerX + faceW * 0.6, headTopY - faceW * 0.08, rightTempleX + padX, headTopY, rightTempleX + padX, foreheadY + faceH * 0.05);
-  ctx.closePath();
-  ctx.fill();
-
-  // Wavy side panels
+function drawBob(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const bobBot = cy - fh * 0.1;
+  const padX = fw * 0.22;
+  cap(ctx, f, col, 0.28);
+  // Side curtains
   for (let side = -1; side <= 1; side += 2) {
-    const baseX = side < 0 ? leftTempleX - padX : rightTempleX + padX;
-    const innerX = side < 0 ? leftTempleX + faceW * 0.06 : rightTempleX - faceW * 0.06;
-    const wGrad = ctx.createLinearGradient(baseX, foreheadY, innerX, waveBottom);
-    wGrad.addColorStop(0, lighten(color, 0.18));
-    wGrad.addColorStop(0.5, color);
-    wGrad.addColorStop(1, darken(color, 0.28));
-    ctx.fillStyle = wGrad;
-
+    const bx = side < 0 ? lx - padX : rx + padX;
+    const ix = side < 0 ? lx + fw * 0.05 : rx - fw * 0.05;
+    const sg = ctx.createLinearGradient(bx, fy, ix, bobBot);
+    sg.addColorStop(0, lt(col, 0.18)); sg.addColorStop(0.6, col); sg.addColorStop(1, dk(col, 0.32));
+    ctx.fillStyle = sg;
     ctx.beginPath();
-    ctx.moveTo(innerX, foreheadY + faceH * 0.12);
-    let y = foreheadY + faceH * 0.2;
-    const step = faceH * 0.22;
-    const amp = faceW * 0.07;
-    while (y < waveBottom) {
-      const dir = side;
-      ctx.bezierCurveTo(innerX + dir * amp, y, baseX, y + step * 0.4, baseX, y + step * 0.5);
-      ctx.bezierCurveTo(baseX, y + step * 0.6, innerX + dir * amp, y + step * 0.85, innerX, y + step);
+    ctx.moveTo(ix, fy + fh * 0.1);
+    ctx.bezierCurveTo(ix + side * fw * 0.02, cy - fh * 0.5, bx, cy - fh * 0.3, bx, bobBot);
+    ctx.lineTo(bx - side * fw * 0.1, bobBot);
+    ctx.bezierCurveTo(bx - side * fw * 0.1, cy - fh * 0.25, ix + side * fw * 0.06, cy - fh * 0.55, ix + side * fw * 0.04, fy + fh * 0.1);
+    ctx.closePath(); ctx.fill();
+  }
+  // Bottom edge line
+  ctx.strokeStyle = dk(col, 0.25); ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(lx - padX + fw * 0.06, bobBot);
+  ctx.quadraticCurveTo(cx, bobBot + fh * 0.02, rx + padX - fw * 0.06, bobBot);
+  ctx.stroke();
+  strands(ctx, f, col, 26, ht, bobBot, rx - lx + padX * 2, fw * 0.04);
+}
+
+function drawLob(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const lobBot = cy + fh * 0.22;
+  const padX = fw * 0.25;
+  cap(ctx, f, col, 0.28);
+  for (let side = -1; side <= 1; side += 2) {
+    const bx = side < 0 ? lx - padX : rx + padX;
+    const ix = side < 0 ? lx + fw * 0.04 : rx - fw * 0.04;
+    const sg = vGrad(ctx, cx, fy, lobBot, col);
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.moveTo(ix, fy + fh * 0.1);
+    ctx.bezierCurveTo(ix - side * fw * 0.03, cy - fh * 0.3, bx + side * fw * 0.03, cy, bx, lobBot);
+    ctx.lineTo(bx - side * fw * 0.12, lobBot);
+    ctx.bezierCurveTo(bx - side * fw * 0.1, cy - fh * 0.05, ix + side * fw * 0.06, cy - fh * 0.4, ix + side * fw * 0.04, fy + fh * 0.1);
+    ctx.closePath(); ctx.fill();
+  }
+  strands(ctx, f, col, 30, ht, lobBot, rx - lx + padX * 2, fw * 0.03);
+}
+
+function drawWavyMedium(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const wBot = cy + fh * 0.35;
+  const padX = fw * 0.28;
+  cap(ctx, f, col, 0.3);
+  for (let side = -1; side <= 1; side += 2) {
+    const bx = side < 0 ? lx - padX : rx + padX;
+    const ix = side < 0 ? lx + fw * 0.05 : rx - fw * 0.05;
+    ctx.fillStyle = vGrad(ctx, cx, fy, wBot, col);
+    ctx.beginPath();
+    ctx.moveTo(ix, fy + fh * 0.1);
+    let y = fy + fh * 0.18;
+    const step = fh * 0.2;
+    const amp = fw * 0.06;
+    while (y < wBot) {
+      ctx.bezierCurveTo(ix + side * amp, y, bx, y + step * 0.4, bx, y + step * 0.5);
+      ctx.bezierCurveTo(bx, y + step * 0.6, ix + side * amp, y + step * 0.85, ix, y + step);
       y += step;
     }
-    ctx.lineTo(baseX + side * faceW * 0.08, waveBottom);
-    ctx.lineTo(baseX, foreheadY + faceH * 0.08);
-    ctx.closePath();
-    ctx.fill();
+    ctx.lineTo(bx + side * fw * 0.06, wBot);
+    ctx.lineTo(bx, fy + fh * 0.06);
+    ctx.closePath(); ctx.fill();
   }
 }
 
-function drawLongStraight(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, faceW, faceH, faceY, foreheadY, leftTempleX, rightTempleX } = f;
-  const longBottom = faceY + faceH * 2.0;
-  const padX = faceW * 0.3;
-
-  // Side panels
+function drawLongStraight(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const longBot = cy + fh * 1.2;
+  const padX = fw * 0.3;
+  cap(ctx, f, col, 0.32);
   for (let side = -1; side <= 1; side += 2) {
-    const baseX = side < 0 ? leftTempleX - padX : rightTempleX + padX;
-    const innerX = side < 0 ? leftTempleX + faceW * 0.04 : rightTempleX - faceW * 0.04;
-    const sGrad = ctx.createLinearGradient(0, foreheadY, 0, longBottom);
-    sGrad.addColorStop(0, lighten(color, 0.15));
-    sGrad.addColorStop(0.6, color);
-    sGrad.addColorStop(1, darken(color, 0.4));
-    ctx.fillStyle = sGrad;
+    const bx = side < 0 ? lx - padX : rx + padX;
+    const ix = side < 0 ? lx + fw * 0.04 : rx - fw * 0.04;
+    const sg = vGrad(ctx, cx, fy, longBot, col);
+    ctx.fillStyle = sg;
     ctx.beginPath();
-    ctx.moveTo(innerX, foreheadY + faceH * 0.12);
-    ctx.bezierCurveTo(innerX - side * faceW * 0.04, faceY + faceH * 0.8, baseX + side * faceW * 0.04, faceY + faceH * 1.2, baseX, longBottom);
-    ctx.lineTo(baseX - side * faceW * 0.12, longBottom);
-    ctx.bezierCurveTo(baseX - side * faceW * 0.12, faceY + faceH * 1.1, innerX + side * faceW * 0.08, faceY + faceH * 0.6, innerX + side * faceW * 0.06, foreheadY + faceH * 0.12);
-    ctx.closePath();
-    ctx.fill();
+    ctx.moveTo(ix, fy + fh * 0.1);
+    ctx.bezierCurveTo(ix - side * fw * 0.04, cy, bx + side * fw * 0.04, cy + fh * 0.6, bx, longBot);
+    ctx.lineTo(bx - side * fw * 0.1, longBot);
+    ctx.bezierCurveTo(bx - side * fw * 0.1, cy + fh * 0.5, ix + side * fw * 0.06, cy - fh * 0.05, ix + side * fw * 0.04, fy + fh * 0.1);
+    ctx.closePath(); ctx.fill();
   }
-
-  // Top cap
-  const capGrad = hairGrad(ctx, centerX, headTopY, foreheadY, color);
-  ctx.fillStyle = capGrad;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - padX, foreheadY + faceH * 0.05);
-  ctx.bezierCurveTo(leftTempleX - padX, headTopY, centerX - faceW * 0.55, headTopY - faceW * 0.1, centerX, headTopY - faceW * 0.1);
-  ctx.bezierCurveTo(centerX + faceW * 0.55, headTopY - faceW * 0.1, rightTempleX + padX, headTopY, rightTempleX + padX, foreheadY + faceH * 0.05);
-  ctx.closePath();
-  ctx.fill();
-
-  // Straight strands
-  addStrands(ctx, f, color, 40, headTopY, longBottom, rightTempleX - leftTempleX + padX * 2, 0);
-
-  // Highlight center part
-  const hGrad = ctx.createLinearGradient(centerX - 4, headTopY, centerX + 4, headTopY);
-  hGrad.addColorStop(0, 'rgba(255,255,255,0)');
-  hGrad.addColorStop(0.5, 'rgba(255,255,255,0.25)');
-  hGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = hGrad;
-  ctx.fillRect(centerX - 4, headTopY, 8, foreheadY - headTopY);
+  strands(ctx, f, col, 38, ht, longBot, rx - lx + padX * 2, 0);
+  // Center part highlight
+  const hg = ctx.createLinearGradient(cx - 4, ht, cx + 4, ht);
+  hg.addColorStop(0, 'rgba(255,255,255,0)'); hg.addColorStop(0.5, 'rgba(255,255,255,0.2)'); hg.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = hg; ctx.fillRect(cx - 4, ht, 8, fy - ht);
 }
 
-function drawCurly(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, faceW, faceH, faceY, foreheadY, leftTempleX, rightTempleX } = f;
-  const curlyH = faceH * 1.2;
-  const padX = faceW * 0.3;
-  const rnds = 80;
-
+function drawCurlyNatural(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const curlBot = cy + fh * 0.3;
+  const padX = fw * 0.32;
   ctx.save();
-  // Clip to curly region
   ctx.beginPath();
-  ctx.ellipse(centerX, headTopY + curlyH * 0.2, faceW * 0.85, curlyH * 0.7, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, ht + fh * 0.18, (rx - lx) / 2 + padX, fh * 0.68, 0, 0, Math.PI * 2);
   ctx.clip();
-
-  // Base fill
-  const bGrad = ctx.createRadialGradient(centerX, headTopY, faceW * 0.1, centerX, headTopY + curlyH * 0.25, faceW * 0.85);
-  bGrad.addColorStop(0, lighten(color, 0.25));
-  bGrad.addColorStop(0.6, color);
-  bGrad.addColorStop(1, darken(color, 0.35));
+  const bGrad = ctx.createRadialGradient(cx - fw * 0.15, ht, fw * 0.08, cx, ht + fh * 0.2, (rx - lx) / 2 + padX);
+  bGrad.addColorStop(0, lt(col, 0.3)); bGrad.addColorStop(0.55, col); bGrad.addColorStop(1, dk(col, 0.38));
   ctx.fillStyle = bGrad;
-  ctx.fillRect(centerX - faceW * 0.9, headTopY - faceW * 0.2, faceW * 1.8, curlyH + faceW * 0.2);
+  ctx.fillRect(cx - fw, ht - fw * 0.1, fw * 2, curlBot - ht + fw * 0.15);
+  // Curl rings
+  for (let i = 0; i < 70; i++) {
+    const cx2 = cx + (Math.random() - 0.5) * (rx - lx + padX * 1.6);
+    const cy2 = ht + Math.random() * (curlBot - ht) * 0.9;
+    const r = fw * (0.038 + Math.random() * 0.065);
+    ctx.strokeStyle = Math.random() > 0.5 ? lt(col, 0.28) : dk(col, 0.22);
+    ctx.lineWidth = 1.4 + Math.random() * 1.4;
+    ctx.beginPath(); ctx.arc(cx2, cy2, r, 0, Math.PI * 1.6); ctx.stroke();
+  }
+  ctx.restore();
+}
 
-  // Random curls
-  for (let i = 0; i < rnds; i++) {
-    const cx2 = centerX + (Math.random() - 0.5) * faceW * 1.5;
-    const cy2 = headTopY + Math.random() * curlyH * 0.85;
-    const r = faceW * (0.04 + Math.random() * 0.07);
-    const bright = Math.random() > 0.5;
-    ctx.strokeStyle = bright ? lighten(color, 0.3) : darken(color, 0.2);
-    ctx.lineWidth = 1.5 + Math.random() * 1.5;
+function drawAfro(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw } = f;
+  const rX = fw * 0.78; const rY = fw * 0.74; const cY = ht + fw * 0.06;
+  const bGrad = ctx.createRadialGradient(cx - fw * 0.2, cY - fw * 0.18, fw * 0.04, cx, cY, rX);
+  bGrad.addColorStop(0, lt(col, 0.48)); bGrad.addColorStop(0.45, lt(col, 0.1)); bGrad.addColorStop(0.8, col); bGrad.addColorStop(1, dk(col, 0.48));
+  ctx.fillStyle = bGrad;
+  ctx.beginPath(); ctx.ellipse(cx, cY, rX, rY, 0, 0, Math.PI * 2); ctx.fill();
+  // Edge bumps
+  for (let i = 0; i < 30; i++) {
+    const angle = (i / 30) * Math.PI * 2;
+    const bx = cx + Math.cos(angle) * rX * 0.9; const by = cY + Math.sin(angle) * rY * 0.9;
+    if (by > fy + 10) continue;
+    ctx.fillStyle = lt(col, 0.15 + Math.random() * 0.2);
+    ctx.beginPath(); ctx.arc(bx, by, fw * (0.055 + Math.random() * 0.07), 0, Math.PI * 2); ctx.fill();
+  }
+  // Texture
+  ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cY, rX * 0.93, rY * 0.93, 0, 0, Math.PI * 2); ctx.clip();
+  for (let i = 0; i < 160; i++) {
+    const tx = cx + (Math.random() - 0.5) * rX * 1.8; const ty = cY + (Math.random() - 0.5) * rY * 1.8;
+    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.07)';
+    ctx.beginPath(); ctx.arc(tx, ty, fw * 0.011, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawBraids(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  cap(ctx, f, col, 0.12);
+  const count = 10;
+  const braidBot = cy + fh * 1.1;
+  for (let i = 0; i < count; i++) {
+    const t = i / (count - 1);
+    const x = lx - fw * 0.04 + (rx - lx + fw * 0.08) * t;
+    const bW = fw * 0.046;
+    const len = fh * (0.9 + Math.sin(t * Math.PI) * 0.4);
+    const sY = fy + fh * 0.06; const eY = sY + len;
+    const bg = ctx.createLinearGradient(x, sY, x, eY);
+    bg.addColorStop(0, col); bg.addColorStop(0.5, lt(col, 0.08)); bg.addColorStop(1, dk(col, 0.45));
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.moveTo(x - bW / 2, sY);
+    for (let j = 0; j < 6; j++) {
+      const yy = sY + (eY - sY) * (j + 1) / 6;
+      const xo = (j % 2 === 0 ? 1 : -1) * bW * 0.3;
+      ctx.lineTo(x + xo + bW / 2, yy); ctx.lineTo(x + xo - bW / 2, yy);
+    }
+    ctx.lineTo(x - bW / 2, sY); ctx.fill();
+    for (let j = 1; j < 6; j++) {
+      ctx.fillStyle = dk(col, 0.55);
+      ctx.fillRect(x - bW / 2, sY + (eY - sY) * j / 6 - 1.5, bW, 3);
+    }
+  }
+}
+
+function drawPonytailHigh(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx } = f;
+  cap(ctx, f, col, 0.08);
+  const tieY = ht - fw * 0.02;
+  const tailLen = fh * 1.5; const tailW = fw * 0.24;
+  const pg = ctx.createLinearGradient(cx, tieY, cx + fw * 0.12, tieY + tailLen);
+  pg.addColorStop(0, col); pg.addColorStop(0.4, lt(col, 0.06)); pg.addColorStop(1, dk(col, 0.5));
+  ctx.fillStyle = pg;
+  ctx.beginPath();
+  ctx.moveTo(cx - tailW / 2, tieY);
+  ctx.bezierCurveTo(cx - tailW / 2 - fw * 0.04, tieY + tailLen * 0.38, cx + fw * 0.08, tieY + tailLen * 0.68, cx + fw * 0.04, tieY + tailLen);
+  ctx.lineTo(cx + tailW / 2 + fw * 0.04, tieY + tailLen);
+  ctx.bezierCurveTo(cx + tailW / 2 + fw * 0.08, tieY + tailLen * 0.68, cx + tailW / 2 + fw * 0.04, tieY + tailLen * 0.38, cx + tailW / 2, tieY);
+  ctx.closePath(); ctx.fill();
+  strands(ctx, f, col, 18, tieY, tieY + tailLen, tailW, fw * 0.07);
+  // Tie band
+  ctx.fillStyle = dk(col, 0.55);
+  ctx.beginPath(); ctx.roundRect(cx - tailW / 2 - 2, tieY - 5, tailW + 4, 12, 3); ctx.fill();
+}
+
+function drawLongLayers(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const longBot = cy + fh * 1.3;
+  const padX = fw * 0.3;
+  cap(ctx, f, col, 0.3);
+  // Multiple layer curtains
+  for (let layer = 0; layer < 3; layer++) {
+    const alpha = 0.85 - layer * 0.15;
+    const layerBot = cy + fh * (0.6 + layer * 0.35);
+    for (let side = -1; side <= 1; side += 2) {
+      const bx = side < 0 ? lx - padX + fw * 0.04 * layer : rx + padX - fw * 0.04 * layer;
+      const ix = side < 0 ? lx + fw * 0.04 : rx - fw * 0.04;
+      const sg = vGrad(ctx, cx, fy, layerBot, col);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = sg;
+      ctx.beginPath();
+      ctx.moveTo(ix, fy + fh * 0.1);
+      ctx.bezierCurveTo(ix - side * fw * 0.03, cy - fh * 0.2, bx + side * fw * 0.03, cy + fh * 0.3, bx, layerBot);
+      ctx.lineTo(bx - side * fw * 0.12, layerBot);
+      ctx.bezierCurveTo(bx - side * fw * 0.12, cy + fh * 0.2, ix + side * fw * 0.05, cy - fh * 0.3, ix + side * fw * 0.04, fy + fh * 0.1);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  strands(ctx, f, col, 34, ht, longBot, rx - lx + padX * 2, 0);
+}
+
+function drawBun(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx } = f;
+  // Flat top
+  cap(ctx, f, col, 0.1);
+  // Bun on top
+  const bunCX = cx; const bunCY = ht - fw * 0.22;
+  const bunRX = fw * 0.2; const bunRY = fw * 0.18;
+  const bunGrad = ctx.createRadialGradient(bunCX - bunRX * 0.3, bunCY - bunRY * 0.3, bunRX * 0.05, bunCX, bunCY, bunRX);
+  bunGrad.addColorStop(0, lt(col, 0.4)); bunGrad.addColorStop(0.5, col); bunGrad.addColorStop(1, dk(col, 0.4));
+  ctx.fillStyle = bunGrad;
+  ctx.beginPath(); ctx.ellipse(bunCX, bunCY, bunRX, bunRY, 0, 0, Math.PI * 2); ctx.fill();
+  // Texture wrap
+  ctx.strokeStyle = dk(col, 0.25); ctx.lineWidth = 1;
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
     ctx.beginPath();
-    ctx.arc(cx2, cy2, r, 0, Math.PI * 1.7);
+    ctx.moveTo(bunCX, bunCY);
+    ctx.arc(bunCX, bunCY, bunRX * 0.85, a, a + Math.PI * 0.28);
     ctx.stroke();
   }
-  ctx.restore();
-
-  // Top fringe highlight
-  const fGrad = ctx.createRadialGradient(centerX, headTopY, 0, centerX, headTopY, faceW * 0.55);
-  fGrad.addColorStop(0, 'rgba(255,255,255,0.15)');
-  fGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = fGrad;
-  ctx.beginPath();
-  ctx.ellipse(centerX, headTopY + faceW * 0.15, faceW * 0.55, faceW * 0.35, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Hair tie
+  ctx.fillStyle = dk(col, 0.6);
+  ctx.beginPath(); ctx.ellipse(bunCX, bunCY + bunRY - 3, bunRX * 0.35, 5, 0, 0, Math.PI * 2); ctx.fill();
 }
 
-function drawAfro(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, faceW, faceH, foreheadY } = f;
-  const rX = faceW * 0.75;
-  const rY = faceW * 0.72;
-  const cY = headTopY + faceW * 0.08;
-
-  // Base sphere
-  const bGrad = ctx.createRadialGradient(centerX - faceW * 0.2, cY - faceW * 0.2, faceW * 0.05, centerX, cY, rX);
-  bGrad.addColorStop(0, lighten(color, 0.45));
-  bGrad.addColorStop(0.4, lighten(color, 0.1));
-  bGrad.addColorStop(0.8, color);
-  bGrad.addColorStop(1, darken(color, 0.45));
-  ctx.fillStyle = bGrad;
-  ctx.beginPath();
-  ctx.ellipse(centerX, cY, rX, rY, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Fluffy outer edge bumps
-  const bumps = 28;
-  for (let i = 0; i < bumps; i++) {
-    const angle = (i / bumps) * Math.PI * 2;
-    const bx = centerX + Math.cos(angle) * (rX * 0.92);
-    const by = cY + Math.sin(angle) * (rY * 0.92);
-    if (by > foreheadY + faceH * 0.08) continue; // don't go below forehead
-    const bumpR = faceW * (0.06 + Math.random() * 0.07);
-    ctx.fillStyle = lighten(color, 0.12 + Math.random() * 0.18);
+function drawFringe(ctx: CanvasRenderingContext2D, f: FaceMetrics, col: string): void {
+  const { cx, headTopY: ht, foreheadY: fy, faceW: fw, faceH: fh, leftX: lx, rightX: rx, chinY: cy } = f;
+  const longBot = cy + fh * 1.0;
+  const padX = fw * 0.28;
+  cap(ctx, f, col, 0.28);
+  for (let side = -1; side <= 1; side += 2) {
+    const bx = side < 0 ? lx - padX : rx + padX;
+    const ix = side < 0 ? lx + fw * 0.04 : rx - fw * 0.04;
+    ctx.fillStyle = vGrad(ctx, cx, fy, longBot, col);
     ctx.beginPath();
-    ctx.arc(bx, by, bumpR, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(ix, fy + fh * 0.1);
+    ctx.bezierCurveTo(ix - side * fw * 0.02, cy - fh * 0.2, bx + side * fw * 0.02, cy + fh * 0.4, bx, longBot);
+    ctx.lineTo(bx - side * fw * 0.1, longBot);
+    ctx.bezierCurveTo(bx - side * fw * 0.1, cy + fh * 0.3, ix + side * fw * 0.05, cy - fh * 0.3, ix + side * fw * 0.04, fy + fh * 0.1);
+    ctx.closePath(); ctx.fill();
   }
-
-  // Texture dots
-  ctx.save();
+  // Blunt fringe across forehead
+  ctx.fillStyle = dk(col, 0.06);
   ctx.beginPath();
-  ctx.ellipse(centerX, cY, rX * 0.95, rY * 0.95, 0, 0, Math.PI * 2);
-  ctx.clip();
-  for (let i = 0; i < 180; i++) {
-    const tx = centerX + (Math.random() - 0.5) * rX * 1.8;
-    const ty = cY + (Math.random() - 0.5) * rY * 1.8;
-    ctx.fillStyle = Math.random() > 0.5 ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.08)';
-    ctx.beginPath();
-    ctx.arc(tx, ty, faceW * 0.012, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
+  ctx.moveTo(lx - padX, fy + fh * 0.05);
+  ctx.bezierCurveTo(lx - padX, fy + fh * 0.16, rx + padX, fy + fh * 0.16, rx + padX, fy + fh * 0.05);
+  ctx.closePath(); ctx.fill();
+  strands(ctx, f, col, 24, ht, longBot, rx - lx + padX * 2, 0);
 }
 
-function drawPonytail(ctx: CanvasRenderingContext2D, f: FaceData, color: string): void {
-  const { centerX, headTopY, faceW, faceH, faceY, foreheadY, leftTempleX, rightTempleX } = f;
+// ─── Hairstyle catalog ──────────────────────────────────────────────────────
 
-  // Flat top cap
-  const capGrad = hairGrad(ctx, centerX, headTopY, foreheadY, color);
-  ctx.fillStyle = capGrad;
-  ctx.beginPath();
-  ctx.moveTo(leftTempleX - faceW * 0.06, foreheadY + faceH * 0.04);
-  ctx.bezierCurveTo(leftTempleX - faceW * 0.06, headTopY, centerX - faceW * 0.5, headTopY - faceW * 0.06, centerX, headTopY - faceW * 0.08);
-  ctx.bezierCurveTo(centerX + faceW * 0.5, headTopY - faceW * 0.06, rightTempleX + faceW * 0.06, headTopY, rightTempleX + faceW * 0.06, foreheadY + faceH * 0.04);
-  ctx.lineTo(rightTempleX, foreheadY + faceH * 0.1);
-  ctx.lineTo(leftTempleX, foreheadY + faceH * 0.1);
-  ctx.closePath();
-  ctx.fill();
+const HAIRSTYLES: HairstyleOption[] = [
+  // Hombre
+  { id: 'buzz',       name: 'Buzz Cut',         gender: ['hombre'],          category: 'corto',   tags: ['rapado','clásico'],    draw: drawBuzzCut },
+  { id: 'fade',       name: 'Fade / Undercut',  gender: ['hombre'],          category: 'corto',   tags: ['moderno','volumen'],   draw: drawFadeUndercut },
+  { id: 'pompadour',  name: 'Pompadour',         gender: ['hombre'],          category: 'corto',   tags: ['retro','volumen'],     draw: drawPompadour },
+  { id: 'textured',   name: 'Corte Texturizado', gender: ['hombre'],          category: 'corto',   tags: ['moderno','casual'],    draw: drawTexturedCrop },
+  { id: 'quiff',      name: 'Quiff',             gender: ['hombre'],          category: 'corto',   tags: ['elegante','volumen'],  draw: drawQuiff },
+  { id: 'caesar',     name: 'Caesar Cut',        gender: ['hombre'],          category: 'corto',   tags: ['clásico','flequillo'], draw: drawCaesarCut },
+  { id: 'dreadlocks', name: 'Dreadlocks',        gender: ['hombre','mujer'],  category: 'especial',tags: ['étnico','largo'],      draw: drawDreadlocks },
+  // Mujer
+  { id: 'pixie',      name: 'Pixie Cut',         gender: ['mujer'],           category: 'corto',   tags: ['moderno','atrevido'],  draw: drawPixie },
+  { id: 'bob',        name: 'Bob Liso',          gender: ['mujer'],           category: 'corto',   tags: ['elegante','clásico'],  draw: drawBob },
+  { id: 'lob',        name: 'Lob (Long Bob)',    gender: ['mujer'],           category: 'medio',   tags: ['tendencia','versátil'],draw: drawLob },
+  { id: 'wavy',       name: 'Ondas Medias',      gender: ['mujer'],           category: 'medio',   tags: ['romántico','natural'], draw: drawWavyMedium },
+  { id: 'bun',        name: 'Bun Alto',          gender: ['mujer'],           category: 'especial',tags: ['recogido','elegante'], draw: drawBun },
+  { id: 'fringe',     name: 'Flequillo + Largo', gender: ['mujer'],           category: 'largo',   tags: ['suave','romántico'],   draw: drawFringe },
+  { id: 'braids',     name: 'Trenzas Largas',    gender: ['mujer','hombre'],  category: 'especial',tags: ['étnico','largo'],      draw: drawBraids },
+  { id: 'ponytail',   name: 'Cola Alta',         gender: ['mujer'],           category: 'especial',tags: ['sport','recogido'],    draw: drawPonytailHigh },
+  { id: 'longlayers', name: 'Capas Largas',      gender: ['mujer'],           category: 'largo',   tags: ['volumen','natural'],   draw: drawLongLayers },
+  // Unisex
+  { id: 'long',       name: 'Liso Largo',        gender: ['hombre','mujer'],  category: 'largo',   tags: ['clásico','suave'],     draw: drawLongStraight },
+  { id: 'curly',      name: 'Rizado Natural',    gender: ['hombre','mujer'],  category: 'medio',   tags: ['natural','étnico'],    draw: drawCurlyNatural },
+  { id: 'afro',       name: 'Afro',              gender: ['hombre','mujer'],  category: 'especial',tags: ['étnico','volumen'],    draw: drawAfro },
+];
 
-  // Hair tie position
-  const tieX = centerX;
-  const tieY = headTopY - faceW * 0.01;
-
-  // Ponytail bundle going down the back
-  const tailLength = faceH * 1.4;
-  const tailW = faceW * 0.22;
-  const pGrad = ctx.createLinearGradient(tieX, tieY, tieX + faceW * 0.15, tieY + tailLength);
-  pGrad.addColorStop(0, color);
-  pGrad.addColorStop(0.4, lighten(color, 0.08));
-  pGrad.addColorStop(1, darken(color, 0.45));
-  ctx.fillStyle = pGrad;
-  ctx.beginPath();
-  ctx.moveTo(tieX - tailW / 2, tieY);
-  ctx.bezierCurveTo(tieX - tailW / 2 - faceW * 0.05, tieY + tailLength * 0.4, tieX + faceW * 0.1, tieY + tailLength * 0.7, tieX + faceW * 0.05, tieY + tailLength);
-  ctx.lineTo(tieX + tailW / 2 + faceW * 0.05, tieY + tailLength);
-  ctx.bezierCurveTo(tieX + tailW / 2 + faceW * 0.1, tieY + tailLength * 0.7, tieX + tailW / 2 + faceW * 0.05, tieY + tailLength * 0.4, tieX + tailW / 2, tieY);
-  ctx.closePath();
-  ctx.fill();
-
-  // Strands in ponytail
-  addStrands(ctx, f, color, 20, tieY, tieY + tailLength, tailW, faceW * 0.08);
-
-  // Hair tie band
-  ctx.fillStyle = darken(color, 0.5);
-  ctx.fillRect(tieX - tailW / 2 - 2, tieY - 5, tailW + 4, 12);
-  ctx.fillStyle = lighten(color, 0.3);
-  ctx.fillRect(tieX - tailW / 2 + 2, tieY - 4, tailW - 4, 3);
-}
+const COLORS: ColorOption[] = [
+  { label: 'Negro azabache', value: '#0a0604' },
+  { label: 'Castaño oscuro', value: '#2d1a0e' },
+  { label: 'Castaño natural', value: '#5a3018' },
+  { label: 'Castaño claro',  value: '#7d4a20' },
+  { label: 'Rubio oscuro',   value: '#8b6030' },
+  { label: 'Rubio dorado',   value: '#c09040' },
+  { label: 'Rubio miel',     value: '#d4a855' },
+  { label: 'Rubio platino',  value: '#dfd0a0' },
+  { label: 'Ceniza claro',   value: '#c8c0b0' },
+  { label: 'Gris plateado',  value: '#8a8a9a' },
+  { label: 'Rojo cobre',     value: '#a03818' },
+  { label: 'Rojo intenso',   value: '#780e0e' },
+  { label: 'Borgoña',        value: '#5a0a1e' },
+  { label: 'Azul oscuro',    value: '#0e1840' },
+  { label: 'Verde oscuro',   value: '#0a2818' },
+  { label: 'Morado',         value: '#380840' },
+];
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
@@ -524,353 +580,490 @@ function drawPonytail(ctx: CanvasRenderingContext2D, f: FaceData, color: string)
   imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="hairstyle-container">
-      @if (processing()) {
-        <div class="processing-overlay">
-          <div class="scanner-anim">
-            <div class="scanner-bar"></div>
-            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-              <circle cx="40" cy="40" r="36" stroke="#c9a96e" stroke-width="2" stroke-dasharray="6 4" opacity="0.6"/>
-              <circle cx="40" cy="40" r="20" stroke="#c9a96e" stroke-width="1.5" opacity="0.4"/>
-              <path d="M28 30 Q40 22 52 30 Q40 18 28 30Z" fill="#c9a96e" opacity="0.7"/>
-            </svg>
-            <p class="scan-text">{{ statusMsg() }}</p>
+<div class="ht-root">
+
+  @if (processing()) {
+    <div class="overlay">
+      <div class="overlay-inner">
+        <div class="scan-ring">
+          <svg class="spin" width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="24" stroke="rgba(201,169,110,0.2)" stroke-width="2.5"/>
+            <path d="M28 4 A24 24 0 0 1 52 28" stroke="#c9a96e" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <svg class="face-icon" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" stroke="#c9a96e" stroke-width="1.5"/>
+            <circle cx="9" cy="10" r="1.5" fill="#c9a96e"/><circle cx="15" cy="10" r="1.5" fill="#c9a96e"/>
+            <path d="M9 15c.83 1 2 1.5 3 1.5s2.17-.5 3-1.5" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <p class="overlay-msg">{{ statusMsg() }}</p>
+      </div>
+    </div>
+  }
+
+  <div class="layout">
+
+    <!-- ── Canvas zone ── -->
+    <div class="canvas-zone">
+      <div class="canvas-card" (click)="!imageLoaded() && triggerUpload()">
+        @if (!imageLoaded()) {
+          <div class="empty-state">
+            <div class="upload-ring">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round"/>
+                <polyline points="17 8 12 3 7 8" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="12" y1="3" x2="12" y2="15" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <p class="empty-title">Sube una foto de frente</p>
+            <p class="empty-sub">La IA detecta tu rostro y aplica el peinado preservando tu identidad facial</p>
+            <span class="file-hint">JPG, PNG · máx 10 MB</span>
           </div>
+        }
+        <canvas #photoCanvas [class.visible]="imageLoaded()"></canvas>
+      </div>
+
+      <!-- Status badge -->
+      @if (imageLoaded()) {
+        <div class="status-badge" [class.warn]="!faceDetected()">
+          @if (faceDetected()) {
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Rostro detectado — identidad facial preservada</span>
+          } @else {
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#facc15" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="#facc15" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span>Sin rostro detectado — posición estimada</span>
+          }
         </div>
       }
 
-      <div class="layout">
-        <!-- Canvas Panel -->
-        <div class="canvas-panel">
-          <div class="canvas-wrapper" (click)="!imageLoaded() && fileInputRef.nativeElement.click()">
-            @if (!imageLoaded()) {
-              <div class="upload-placeholder">
-                <div class="upload-icon-ring">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="#c9a96e" stroke-width="1.5"/>
-                    <polyline points="17 8 12 3 7 8" stroke="#c9a96e" stroke-width="1.5"/>
-                    <line x1="12" y1="3" x2="12" y2="15" stroke="#c9a96e" stroke-width="1.5"/>
-                  </svg>
-                </div>
-                <p class="upload-title">Sube tu foto de frente</p>
-                <p class="upload-hint">La IA detectará tu rostro y aplicará el nuevo peinado</p>
-                <span class="upload-sub">JPG, PNG hasta 10MB</span>
-              </div>
-            }
-            <canvas #photoCanvas [style.display]="imageLoaded() ? 'block' : 'none'"></canvas>
-          </div>
+      <!-- Action buttons -->
+      <div class="action-row">
+        <button class="btn-ghost" (click)="triggerUpload()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Subir foto
+        </button>
+        @if (imageLoaded()) {
+          <button class="btn-gold" (click)="download()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Descargar
+          </button>
+          <button class="btn-ghost" (click)="resetToOriginal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 3v5h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Original
+          </button>
+        }
+      </div>
 
-          @if (faceDetected() && imageLoaded()) {
-            <div class="face-badge">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/></svg>
-              Rostro detectado — identidad facial preservada
-            </div>
-          }
-          @if (imageLoaded() && !faceDetected()) {
-            <div class="face-badge warn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#facc15" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="#facc15" stroke-width="1.5"/></svg>
-              No se detectó rostro — el efecto puede no ser preciso
-            </div>
-          }
+      <input #fileInput type="file" accept="image/*" style="display:none" (change)="loadFile($event)">
+    </div>
 
-          <div class="canvas-actions">
-            <button class="btn-secondary" (click)="fileInputRef.nativeElement.click()">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.5"/></svg>
-              Subir foto
+    <!-- ── Controls ── -->
+    <div class="controls">
+
+      <!-- Gender selector -->
+      <div class="ctrl-section">
+        <p class="ctrl-label">Género</p>
+        <div class="gender-row">
+          @for (g of genders; track g.value) {
+            <button class="gender-btn" [class.active]="selectedGender() === g.value" (click)="selectedGender.set(g.value); activeCategory.set('todos')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                @if (g.value === 'hombre') {
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M15 12l5-5M16 7h4v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                } @else if (g.value === 'mujer') {
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M12 12v6M9 16h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                } @else {
+                  <path d="M12 2C8 2 5 5 5 9c0 4 7 13 7 13s7-9 7-13c0-4-3-7-7-7z" stroke="currentColor" stroke-width="1.5"/>
+                }
+              </svg>
+              {{ g.label }}
             </button>
-            @if (imageLoaded()) {
-              <button class="btn-primary" (click)="download()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="1.5"/></svg>
-                Descargar resultado
-              </button>
-            }
-          </div>
-          <input #fileInput type="file" accept="image/*" style="display:none" (change)="loadFile($event)">
-        </div>
-
-        <!-- Controls -->
-        <div class="controls-panel">
-          <div class="section">
-            <h3 class="section-title">Tipo de corte</h3>
-            <div class="cat-tabs">
-              @for (cat of categories; track cat.value) {
-                <button class="cat-tab" [class.active]="activeCategory() === cat.value" (click)="activeCategory.set(cat.value)">
-                  {{ cat.label }}
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="section">
-            <h3 class="section-title">Estilo</h3>
-            <div class="styles-list">
-              @for (style of filteredStyles(); track style.id) {
-                <button class="style-row" [class.selected]="selectedStyle()?.id === style.id" (click)="applyStyle(style)">
-                  <span class="style-icon">{{ style.icon }}</span>
-                  <div class="style-info">
-                    <span class="style-name">{{ style.name }}</span>
-                    <span class="style-desc">{{ style.description }}</span>
-                  </div>
-                  @if (selectedStyle()?.id === style.id) {
-                    <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#c9a96e" stroke-width="2"/></svg>
-                  }
-                </button>
-              }
-            </div>
-          </div>
-
-          <div class="section">
-            <h3 class="section-title">Color del cabello</h3>
-            <div class="color-grid">
-              @for (c of colors; track c.value) {
-                <button class="color-swatch" [style.background]="c.value" [class.selected]="selectedColor() === c.value" [title]="c.label" (click)="changeColor(c.value)">
-                  @if (selectedColor() === c.value) {
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5"/></svg>
-                  }
-                </button>
-              }
-            </div>
-            <p class="color-label">{{ selectedColorLabel() }}</p>
-          </div>
-
-          <div class="tip-box">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c9a96e" stroke-width="1.5"/><path d="M12 8v4M12 16h.01" stroke="#c9a96e" stroke-width="1.5"/></svg>
-            <p>Los ojos, nariz, boca y estructura facial se mantienen intactos. Solo se modifica el cabello.</p>
-          </div>
+          }
         </div>
       </div>
+
+      <!-- Category filter -->
+      <div class="ctrl-section">
+        <p class="ctrl-label">Tipo de corte</p>
+        <div class="chip-row">
+          @for (c of categories; track c.value) {
+            <button class="chip" [class.active]="activeCategory() === c.value" (click)="activeCategory.set(c.value)">
+              {{ c.label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Styles grid -->
+      <div class="ctrl-section">
+        <p class="ctrl-label">Peinado ({{ filteredStyles().length }})</p>
+        <div class="styles-grid">
+          @for (s of filteredStyles(); track s.id) {
+            <button class="style-card" [class.active]="selectedStyle()?.id === s.id" (click)="applyStyle(s)">
+              <!-- Mini preview canvas -->
+              <div class="preview-area">
+                <canvas [attr.id]="'prev-' + s.id" width="72" height="72"></canvas>
+              </div>
+              <span class="style-name">{{ s.name }}</span>
+              @if (selectedStyle()?.id === s.id) {
+                <div class="active-dot"></div>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Color picker -->
+      <div class="ctrl-section">
+        <p class="ctrl-label">Color del cabello
+          <span class="color-name-inline">— {{ selectedColorLabel() }}</span>
+        </p>
+        <div class="color-grid">
+          @for (c of colors; track c.value) {
+            <button
+              class="color-swatch"
+              [style.background]="c.value"
+              [title]="c.label"
+              [class.active]="selectedColor() === c.value"
+              (click)="changeColor(c.value)">
+              @if (selectedColor() === c.value) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Info note -->
+      <div class="info-card">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10" stroke="#c9a96e" stroke-width="1.5"/>
+          <path d="M12 8v4M12 16h.01" stroke="#c9a96e" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p>Ojos, nariz, boca y estructura facial se mantienen intactos. Solo se modifica la zona del cabello.</p>
+      </div>
+
     </div>
+  </div>
+</div>
   `,
   styles: [`
-    .hairstyle-container { position: relative; padding: 0 24px 40px; }
-    .processing-overlay {
-      position: fixed; inset: 0;
-      background: rgba(8,8,16,0.88); z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .scanner-anim { display: flex; flex-direction: column; align-items: center; gap: 16px; position: relative; }
-    .scanner-bar {
-      position: absolute; top: 0; left: -10px; right: -10px; height: 2px;
-      background: linear-gradient(90deg, transparent, #c9a96e, transparent);
-      animation: scan 1.8s ease-in-out infinite;
-    }
-    @keyframes scan { 0%,100% { top:0; opacity:1; } 50% { top:80px; opacity:0.6; } }
-    .scan-text { color: #c9a96e; font-size: 14px; margin: 0; }
+    :host { display: block; }
+    .ht-root { position: relative; padding: 0 24px 48px; color: #f0eff4; font-family: Inter, sans-serif; }
 
-    .layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; max-width: 1100px; margin: 0 auto; }
-    .canvas-panel { display: flex; flex-direction: column; gap: 10px; }
-    .canvas-wrapper {
-      background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px; overflow: hidden; min-height: 420px;
-      display: flex; align-items: center; justify-content: center; cursor: pointer;
-    }
-    .canvas-wrapper:has(canvas[style*="block"]) { cursor: default; }
-    canvas { max-width: 100%; display: block; }
-    .upload-placeholder { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 40px; }
-    .upload-icon-ring {
-      width: 72px; height: 72px; border-radius: 50%;
-      border: 1.5px solid rgba(201,169,110,0.3);
+    /* Overlay */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(8,8,16,0.9); z-index: 300;
       display: flex; align-items: center; justify-content: center;
-      background: rgba(201,169,110,0.06);
     }
-    .upload-title { margin: 0; font-size: 16px; color: #f0eff4; font-weight: 500; }
-    .upload-hint { margin: 0; font-size: 13px; color: #9997b0; text-align: center; max-width: 260px; }
-    .upload-sub { font-size: 11px; color: #5a5870; }
-    .face-badge {
-      display: flex; align-items: center; gap: 6px;
-      padding: 8px 14px; border-radius: 8px;
+    .overlay-inner { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .scan-ring { position: relative; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; }
+    .face-icon { position: absolute; }
+    .spin { animation: spin 1.2s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .overlay-msg { color: #c9a96e; font-size: 14px; font-weight: 500; }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 1fr 350px; gap: 24px; max-width: 1100px; margin: 0 auto; }
+
+    /* Canvas zone */
+    .canvas-zone { display: flex; flex-direction: column; gap: 10px; }
+    .canvas-card {
+      background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 18px; overflow: hidden; min-height: 440px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .canvas-card:hover { border-color: rgba(201,169,110,0.2); }
+    canvas { display: none; max-width: 100%; }
+    canvas.visible { display: block; cursor: default; }
+
+    .empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 40px; }
+    .upload-ring {
+      width: 76px; height: 76px; border-radius: 50%;
+      border: 1.5px solid rgba(201,169,110,0.3);
+      background: rgba(201,169,110,0.06);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .empty-title { margin: 0; font-size: 16px; font-weight: 500; color: #f0eff4; }
+    .empty-sub { margin: 0; font-size: 13px; color: #9997b0; text-align: center; max-width: 260px; line-height: 1.5; }
+    .file-hint { font-size: 11px; color: #5a5870; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px;
       background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.2);
       font-size: 12px; color: #4ade80;
     }
-    .face-badge.warn { background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.2); color: #facc15; }
-    .canvas-actions { display: flex; gap: 10px; }
-    .btn-secondary {
-      display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px;
+    .status-badge.warn { background: rgba(250,204,21,0.08); border-color: rgba(250,204,21,0.2); color: #facc15; }
+
+    .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-ghost {
+      display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
       color: #9997b0; font-size: 13px; cursor: pointer; transition: all 0.2s;
     }
-    .btn-secondary:hover { background: rgba(255,255,255,0.08); color: #f0eff4; }
-    .btn-primary {
-      display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px;
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); color: #f0eff4; }
+    .btn-gold {
+      display: flex; align-items: center; gap: 7px; padding: 9px 16px; border-radius: 10px;
       border: none; background: linear-gradient(135deg, #c9a96e, #a07840);
       color: #080810; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
     }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .controls-panel { display: flex; flex-direction: column; gap: 20px; }
-    .section { display: flex; flex-direction: column; gap: 10px; }
-    .section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5a5870; margin: 0; }
-    .cat-tabs { display: flex; flex-wrap: wrap; gap: 5px; }
-    .cat-tab {
+    .btn-gold:hover { opacity: 0.88; transform: translateY(-1px); }
+
+    /* Controls */
+    .controls { display: flex; flex-direction: column; gap: 22px; overflow-y: auto; max-height: calc(100vh - 200px); padding-right: 2px; }
+    .ctrl-section { display: flex; flex-direction: column; gap: 10px; }
+    .ctrl-label { margin: 0; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #5a5870; }
+    .color-name-inline { font-weight: 400; letter-spacing: 0; text-transform: none; color: #9997b0; }
+
+    /* Gender */
+    .gender-row { display: flex; gap: 6px; }
+    .gender-btn {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 0; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03); color: #9997b0; font-size: 13px;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .gender-btn:hover { border-color: rgba(201,169,110,0.3); color: #c9a96e; }
+    .gender-btn.active { background: rgba(201,169,110,0.12); border-color: rgba(201,169,110,0.45); color: #c9a96e; font-weight: 600; }
+
+    /* Chips */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
       padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
       background: transparent; color: #9997b0; font-size: 12px; cursor: pointer; transition: all 0.2s;
     }
-    .cat-tab:hover { border-color: rgba(201,169,110,0.3); color: #c9a96e; }
-    .cat-tab.active { background: rgba(201,169,110,0.12); border-color: rgba(201,169,110,0.4); color: #c9a96e; }
-    .styles-list { display: flex; flex-direction: column; gap: 4px; }
-    .style-row {
-      display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);
-      cursor: pointer; transition: all 0.2s; text-align: left;
+    .chip:hover { border-color: rgba(201,169,110,0.3); color: #c9a96e; }
+    .chip.active { background: rgba(201,169,110,0.12); border-color: rgba(201,169,110,0.4); color: #c9a96e; }
+
+    /* Styles grid */
+    .styles-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .style-card {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 8px 4px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.02); cursor: pointer; transition: all 0.2s;
     }
-    .style-row:hover { border-color: rgba(201,169,110,0.25); background: rgba(201,169,110,0.04); }
-    .style-row.selected { border-color: rgba(201,169,110,0.5); background: rgba(201,169,110,0.07); }
-    .style-icon { font-size: 20px; flex-shrink: 0; }
-    .style-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-    .style-name { font-size: 13px; color: #f0eff4; font-weight: 500; }
-    .style-row.selected .style-name { color: #c9a96e; }
-    .style-desc { font-size: 11px; color: #5a5870; }
-    .check-icon { flex-shrink: 0; }
-    .color-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .style-card:hover { border-color: rgba(201,169,110,0.28); background: rgba(201,169,110,0.04); }
+    .style-card.active { border-color: rgba(201,169,110,0.55); background: rgba(201,169,110,0.08); }
+    .preview-area { width: 72px; height: 72px; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.03); }
+    .preview-area canvas { display: block; }
+    .style-name { font-size: 10px; color: #9997b0; text-align: center; line-height: 1.3; }
+    .style-card.active .style-name { color: #c9a96e; }
+    .active-dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: #c9a96e; }
+
+    /* Colors */
+    .color-grid { display: flex; flex-wrap: wrap; gap: 7px; }
     .color-swatch {
-      width: 32px; height: 32px; border-radius: 8px; border: 2px solid transparent;
+      width: 30px; height: 30px; border-radius: 7px; border: 2px solid transparent;
       cursor: pointer; transition: all 0.2s; padding: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .color-swatch:hover { transform: scale(1.1); }
-    .color-swatch.selected { border-color: #c9a96e; box-shadow: 0 0 0 2px rgba(201,169,110,0.3); }
-    .color-label { font-size: 11px; color: #5a5870; margin: 2px 0 0; }
-    .tip-box {
-      display: flex; align-items: flex-start; gap: 8px; padding: 12px;
+    .color-swatch:hover { transform: scale(1.12); }
+    .color-swatch.active { border-color: #c9a96e; box-shadow: 0 0 0 2px rgba(201,169,110,0.3); transform: scale(1.12); }
+
+    /* Info */
+    .info-card {
+      display: flex; align-items: flex-start; gap: 8px; padding: 12px 14px;
       border-radius: 10px; background: rgba(201,169,110,0.05); border: 1px solid rgba(201,169,110,0.15);
     }
-    .tip-box p { margin: 0; font-size: 12px; color: #9997b0; line-height: 1.5; }
-    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+    .info-card p { margin: 0; font-size: 12px; color: #9997b0; line-height: 1.55; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .controls { max-height: none; overflow-y: visible; }
+    }
   `],
 })
-export class HairstyleTryonComponent {
+export class HairstyleTryonComponent implements AfterViewInit {
   @ViewChild('photoCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('fileInput') fileInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild('fileInput')   fileInputRef!: ElementRef<HTMLInputElement>;
 
   private cdr = inject(ChangeDetectorRef);
 
-  imageLoaded  = signal(false);
-  processing   = signal(false);
-  faceDetected = signal(false);
-  statusMsg    = signal('Cargando modelos IA...');
+  // State
+  imageLoaded   = signal(false);
+  processing    = signal(false);
+  faceDetected  = signal(false);
+  statusMsg     = signal('Cargando modelos IA...');
   selectedStyle = signal<HairstyleOption | null>(null);
-  selectedColor = signal('#3d2b1f');
-  activeCategory = signal<string>('all');
+  selectedColor = signal('#2d1a0e');
+  selectedGender = signal<'hombre' | 'mujer' | 'todos'>('hombre');
+  activeCategory = signal<string>('todos');
 
   private modelsLoaded = false;
   private originalImage: HTMLImageElement | null = null;
-  private faceData: FaceData | null = null;
+  private faceMetrics: FaceMetrics | null = null;
+
+  readonly genders = [
+    { label: 'Hombre', value: 'hombre' as const },
+    { label: 'Mujer',  value: 'mujer'  as const },
+    { label: 'Todos',  value: 'todos'  as const },
+  ];
 
   readonly categories = [
-    { label: 'Todos',  value: 'all'    },
-    { label: 'Corto',  value: 'corto'  },
-    { label: 'Medio',  value: 'medio'  },
-    { label: 'Largo',  value: 'largo'  },
-    { label: 'Rizado', value: 'rizado' },
-    { label: 'Fade',   value: 'fade'   },
+    { label: 'Todos',    value: 'todos'    },
+    { label: 'Corto',    value: 'corto'    },
+    { label: 'Medio',    value: 'medio'    },
+    { label: 'Largo',    value: 'largo'    },
+    { label: 'Especial', value: 'especial' },
   ];
 
-  readonly colors = [
-    { label: 'Negro',        value: '#0a0604' },
-    { label: 'Castaño oscuro', value: '#3d2b1f' },
-    { label: 'Castaño',      value: '#6b3d1e' },
-    { label: 'Rubio oscuro', value: '#8b6532' },
-    { label: 'Rubio dorado', value: '#c8a04a' },
-    { label: 'Rubio platino', value: '#e8d8a8' },
-    { label: 'Rojo intenso', value: '#8b2500' },
-    { label: 'Rojo cobre',   value: '#b04020' },
-    { label: 'Gris plata',   value: '#8a8a9a' },
-    { label: 'Blanco',       value: '#ddd8cc' },
-    { label: 'Azul oscuro',  value: '#1a2050' },
-    { label: 'Verde oscuro', value: '#1a3020' },
-  ];
+  readonly colors = COLORS;
 
   selectedColorLabel = computed(() =>
-    this.colors.find(c => c.value === this.selectedColor())?.label ?? ''
+    COLORS.find(c => c.value === this.selectedColor())?.label ?? ''
   );
 
-  filteredStyles(): HairstyleOption[] {
-    const cat = this.activeCategory();
-    if (cat === 'all') return HAIRSTYLES;
-    return HAIRSTYLES.filter(s => s.category === cat);
+  filteredStyles = computed(() => {
+    const g = this.selectedGender();
+    const c = this.activeCategory();
+    return HAIRSTYLES.filter(s => {
+      const gOk = g === 'todos' || s.gender.includes(g as Gender);
+      const cOk = c === 'todos' || s.category === c;
+      return gOk && cOk;
+    });
+  });
+
+  ngAfterViewInit(): void {
+    // Render mini previews when view is ready
+    setTimeout(() => this.renderPreviews(), 100);
   }
+
+  private renderPreviews(): void {
+    HAIRSTYLES.forEach(style => {
+      const el = document.getElementById('prev-' + style.id) as HTMLCanvasElement | null;
+      if (!el) return;
+      const ctx = el.getContext('2d');
+      if (!ctx) return;
+      // Draw a simple dark background
+      ctx.fillStyle = '#12121e';
+      ctx.fillRect(0, 0, 72, 72);
+      // Draw a basic face silhouette
+      ctx.fillStyle = '#1e1e2e';
+      ctx.beginPath(); ctx.ellipse(36, 44, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
+      // Draw hair preview in selected color
+      const previewColor = this.selectedColor();
+      const fm: FaceMetrics = {
+        cx: 36, foreheadY: 30, headTopY: 10, leftX: 20, rightX: 52,
+        chinY: 66, faceW: 32, faceH: 36,
+      };
+      try { style.draw(ctx, fm, previewColor); } catch { /* ignore */ }
+    });
+  }
+
+  triggerUpload(): void { this.fileInputRef.nativeElement.click(); }
 
   async loadFile(event: Event): Promise<void> {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    (event.target as HTMLInputElement).value = '';
 
     this.processing.set(true);
-    this.statusMsg.set('Cargando modelos IA...');
+    this.statusMsg.set('Procesando imagen...');
     this.cdr.markForCheck();
 
     const reader = new FileReader();
     reader.onload = async (e) => {
+      const dataUrl = e.target?.result as string;
       const img = new Image();
       img.onload = async () => {
         this.originalImage = img;
-        this.statusMsg.set('Detectando rostro...');
+
+        // Draw image to canvas FIRST (fixes canvas size)
+        this.drawBase(img);
+
+        // Then detect face
+        this.statusMsg.set('Detectando rostro con IA...');
         this.cdr.markForCheck();
         await this.detectFace(img);
-        this.drawBase();
+
         this.imageLoaded.set(true);
         this.processing.set(false);
+
+        // Re-apply current style if one is selected
+        if (this.selectedStyle()) this.redraw();
+
+        // Refresh previews with current color
+        setTimeout(() => this.renderPreviews(), 50);
         this.cdr.markForCheck();
       };
-      img.src = e.target?.result as string;
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
-    // reset input so same file can be reloaded
-    (event.target as HTMLInputElement).value = '';
+  }
+
+  private drawBase(img: HTMLImageElement): void {
+    const canvas = this.canvasRef.nativeElement;
+    // Fixed max width — never rely on parentElement.clientWidth during async
+    const maxW = 720;
+    const scale = Math.min(1, maxW / img.naturalWidth);
+    canvas.width  = Math.round(img.naturalWidth  * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
   }
 
   private async detectFace(img: HTMLImageElement): Promise<void> {
-    if (!this.modelsLoaded) {
-      const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
-      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-      await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-      this.modelsLoaded = true;
+    try {
+      if (!this.modelsLoaded) {
+        const URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(URL);
+        this.modelsLoaded = true;
+      }
+
+      const canvas = this.canvasRef.nativeElement;
+      const sx = canvas.width  / img.naturalWidth;
+      const sy = canvas.height / img.naturalHeight;
+
+      const det = await faceapi
+        .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.38 }))
+        .withFaceLandmarks();
+
+      if (!det) { this.buildFallbackMetrics(); return; }
+
+      this.faceDetected.set(true);
+      const lms = det.landmarks.positions;
+      const box = det.detection.box;
+
+      const faceW = box.width  * sx;
+      const faceH = box.height * sy;
+      const cx    = (box.x + box.width / 2) * sx;
+
+      // Forehead = slightly above eyebrow level
+      const leftBrowY  = Math.min(...[17,18,19,20,21].map(i => lms[i].y)) * sy;
+      const rightBrowY = Math.min(...[22,23,24,25,26].map(i => lms[i].y)) * sy;
+      const foreheadY  = Math.min(leftBrowY, rightBrowY) - faceH * 0.04;
+      const headTopY   = foreheadY - faceH * 0.36;
+
+      this.faceMetrics = {
+        cx,
+        foreheadY,
+        headTopY,
+        leftX:  lms[0].x  * sx,
+        rightX: lms[16].x * sx,
+        chinY:  lms[8].y  * sy,
+        faceW,
+        faceH,
+      };
+    } catch {
+      this.buildFallbackMetrics();
     }
-
-    const det = await faceapi
-      .detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.4 }))
-      .withFaceLandmarks();
-
-    if (!det) {
-      this.faceData = null;
-      this.faceDetected.set(false);
-      return;
-    }
-
-    this.faceDetected.set(true);
-    const canvas = this.canvasRef.nativeElement;
-    const scaleX = canvas.width / img.naturalWidth;
-    const scaleY = canvas.height / img.naturalHeight;
-
-    const box = det.detection.box;
-    const faceX = box.x * scaleX;
-    const faceY = box.y * scaleY;
-    const faceW = box.width * scaleX;
-    const faceH = box.height * scaleY;
-
-    const lms = parseLandmarks(det.landmarks.positions, scaleX, scaleY);
-
-    // forehead = average of eyebrow top points, projected up
-    const leftBrowTop  = lms[19]; // top of left brow
-    const rightBrowTop = lms[24];
-    const foreheadY = Math.min(leftBrowTop.y, rightBrowTop.y) - faceH * 0.04;
-    const headTopY  = foreheadY - faceH * 0.38;
-    const leftTempleX  = lms[0].x;
-    const rightTempleX = lms[16].x;
-    const centerX = (leftTempleX + rightTempleX) / 2;
-
-    this.faceData = { scaleX, scaleY, faceX, faceY, faceW, faceH, landmarks: lms,
-      foreheadY, headTopY, leftTempleX, rightTempleX, centerX };
   }
 
-  private drawBase(): void {
-    if (!this.originalImage || !this.canvasRef?.nativeElement) return;
+  private buildFallbackMetrics(): void {
+    this.faceDetected.set(false);
     const canvas = this.canvasRef.nativeElement;
-    const container = canvas.parentElement!;
-    const maxW = Math.min(container.clientWidth || 700, 700);
-    const scale = Math.min(1, maxW / this.originalImage.naturalWidth);
-    canvas.width  = this.originalImage.naturalWidth  * scale;
-    canvas.height = this.originalImage.naturalHeight * scale;
-    const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(this.originalImage, 0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const fw = canvas.width  * 0.42;
+    const fh = canvas.height * 0.52;
+    const fy = canvas.height * 0.14;
+    this.faceMetrics = {
+      cx, foreheadY: fy + fh * 0.12, headTopY: fy - fh * 0.25,
+      leftX: cx - fw / 2, rightX: cx + fw / 2,
+      chinY: fy + fh, faceW: fw, faceH: fh,
+    };
   }
 
   applyStyle(style: HairstyleOption): void {
@@ -880,45 +1073,84 @@ export class HairstyleTryonComponent {
 
   changeColor(color: string): void {
     this.selectedColor.set(color);
+    setTimeout(() => this.renderPreviews(), 10);
     if (this.selectedStyle()) this.redraw();
   }
 
   private redraw(): void {
-    if (!this.originalImage || !this.canvasRef?.nativeElement) return;
+    if (!this.originalImage) return;
     const canvas = this.canvasRef.nativeElement;
     const ctx = canvas.getContext('2d')!;
 
-    // Redraw original image cleanly
+    // Redraw clean photo
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(this.originalImage, 0, 0, canvas.width, canvas.height);
 
     const style = this.selectedStyle();
-    if (!style) return;
+    if (!style || !this.faceMetrics) return;
 
-    // Build face data if not available (no face detected — use image center estimate)
-    let face = this.faceData;
-    if (!face) {
-      const cx = canvas.width / 2;
-      const fw = canvas.width * 0.45;
-      const fh = canvas.height * 0.55;
-      const fy = canvas.height * 0.12;
-      face = {
-        scaleX: 1, scaleY: 1, faceX: cx - fw / 2, faceY: fy, faceW: fw, faceH: fh, landmarks: [],
-        foreheadY: fy + fh * 0.12, headTopY: fy - fh * 0.28,
-        leftTempleX: cx - fw * 0.48, rightTempleX: cx + fw * 0.48, centerX: cx,
-      };
+    const fm = this.faceMetrics;
+
+    // ── 1. Pixel-level hair recoloring in the hair zone ────────────────────
+    const hairZone = {
+      top:    Math.max(0, fm.headTopY - fm.faceH * 0.1),
+      bottom: fm.foreheadY + fm.faceH * 0.04,
+      left:   Math.max(0, fm.leftX  - fm.faceW * 0.35),
+      right:  Math.min(canvas.width, fm.rightX + fm.faceW * 0.35),
+    };
+    this.recolorHairZone(ctx, canvas, this.selectedColor(), hairZone);
+
+    // ── 2. Overlay canvas-drawn style on top ──────────────────────────────
+    ctx.save();
+    ctx.globalAlpha = 0.91;
+    style.draw(ctx, fm, this.selectedColor());
+    ctx.restore();
+  }
+
+  private recolorHairZone(
+    ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
+    newColor: string,
+    zone: { top: number; bottom: number; left: number; right: number }
+  ): void {
+    const [nr, ng, nb] = hexRgb(newColor);
+    const t  = Math.round(zone.top);
+    const b  = Math.round(zone.bottom);
+    const l  = Math.round(zone.left);
+    const r  = Math.round(zone.right);
+    const w  = r - l;
+    const h  = b - t;
+    if (w <= 0 || h <= 0) return;
+
+    const imageData = ctx.getImageData(l, t, w, h);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      const pr = data[i], pg = data[i + 1], pb = data[i + 2];
+      const brightness = (pr + pg + pb) / 3;
+
+      // Skip very bright (background) and near-black (deep shadow keeps texture)
+      if (brightness > 200 || brightness < 12) continue;
+
+      // Strength: darker pixel = stronger recolor (hair typically darker than skin)
+      const strength = Math.max(0, Math.min(0.75, (200 - brightness) / 200 * 0.85));
+
+      data[i]     = Math.round(pr * (1 - strength) + nr * strength);
+      data[i + 1] = Math.round(pg * (1 - strength) + ng * strength);
+      data[i + 2] = Math.round(pb * (1 - strength) + nb * strength);
     }
+    ctx.putImageData(imageData, l, t);
+  }
 
-    ctx.globalAlpha = 0.93;
-    drawHair(ctx, face, style.id, this.selectedColor());
-    ctx.globalAlpha = 1;
+  resetToOriginal(): void {
+    if (!this.originalImage) return;
+    this.drawBase(this.originalImage);
+    this.selectedStyle.set(null);
   }
 
   download(): void {
-    const canvas = this.canvasRef.nativeElement;
     const link = document.createElement('a');
     link.download = 'barber-ai-hairstyle.png';
-    link.href = canvas.toDataURL('image/png');
+    link.href = this.canvasRef.nativeElement.toDataURL('image/png');
     link.click();
   }
 }
