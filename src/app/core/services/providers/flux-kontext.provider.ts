@@ -162,12 +162,16 @@ export class FluxKontextProvider implements ImageGenerationProvider {
 
   private buildPrompt(req: HairstyleGenerationRequest): string {
     return [
-      `Change the hairstyle to ${req.hairstyleLabel}.`,
-      `Hair color: ${req.hairColorName}.`,
-      'Keep all facial features exactly the same: eyes, nose, mouth, skin tone, face shape, jawline.',
-      'Keep background, clothing, and pose identical.',
-      'Only modify the hair: cut, length, volume, texture, and color.',
-      'Photorealistic, professional salon photography quality.',
+      // 1. Primary instruction — what to change and exactly how
+      `Transform ONLY the hair in this photo. New hairstyle: ${req.promptKeywords ?? req.hairstyleLabel}.`,
+      // 2. Color — explicit and descriptive
+      `Dye the hair to ${req.hairColorName} color throughout, roots to ends.`,
+      // 3. Hard identity lock — highest priority
+      'CRITICAL: preserve the person\'s exact facial identity unchanged — same eyes, eyebrows, nose shape, mouth, skin tone, skin texture, ear shape, face structure, jawline, neck, and chin.',
+      // 4. Scene lock
+      'Keep background, lighting, clothing, shoulders, and body pose pixel-perfect identical to original.',
+      // 5. Quality
+      'Photorealistic result. Professional hair salon photography. Sharp focus on hair texture and individual strands.',
     ].join(' ');
   }
 

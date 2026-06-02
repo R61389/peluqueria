@@ -773,6 +773,7 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
         imageBase64,
         hairstyle: style.id,
         hairstyleLabel: style.label,
+        promptKeywords: style.promptKeywords,
         faceShape: shape,
         hairColor: color.hex,
         hairColorName: color.name,
