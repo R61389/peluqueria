@@ -286,3 +286,25 @@
     opacity: 1;
   }
 }
+
+@media (max-width: 768px) {
+  .history-page { padding: 20px 16px; gap: 16px; }
+  .history-header { flex-direction: column; align-items: flex-start; }
+  .history-header .header-actions { flex-direction: column; width: 100%; }
+  .history-header .header-actions .btn-primary,
+  .history-header .header-actions .btn-secondary { width: 100%; text-align: center; }
+  .records-grid { grid-template-columns: 1fr; }
+  .confirm-dialog { flex-direction: column; align-items: flex-start; }
+  .confirm-dialog .confirm-actions { width: 100%; }
+  .confirm-dialog .confirm-actions .btn-danger,
+  .confirm-dialog .confirm-actions .btn-secondary { flex: 1; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .history-page { padding: 16px 12px; }
+  .history-header .page-title { font-size: 26px; }
+  .record-card { border-radius: 12px; }
+  .record-card .record-image,
+  .record-card .record-placeholder { width: 64px; }
+  .empty-state { padding: 40px 12px; }
+}

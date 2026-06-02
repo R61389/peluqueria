@@ -222,3 +222,26 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 768px) {
+  .infographic-wrapper { gap: 12px; }
+  .export-bar { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .export-bar h2 { font-size: 20px; }
+  .export-bar .btn-export { width: 100%; justify-content: center; }
+  .infographic-panel { padding: 20px 16px; border-radius: 18px; }
+  .inf-season-row { flex-wrap: wrap; gap: 10px; }
+  .inf-face-row { gap: 10px; }
+  .inf-footer { flex-direction: column; gap: 4px; align-items: center; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .infographic-panel { padding: 16px 12px; border-radius: 14px; }
+  .inf-header .inf-logo { font-size: 20px; }
+  .inf-season-row .inf-season-emoji { font-size: 36px; }
+  .inf-season-row .inf-season-name { font-size: 16px; }
+  .inf-face-row .inf-badge .inf-badge-value { font-size: 16px; }
+  .inf-face-row .inf-badge { padding: 10px 12px; border-radius: 10px; }
+  .inf-metals { gap: 6px; }
+  .inf-metals .inf-metal-chip { font-size: 12px; padding: 5px 10px; }
+  .inf-section { padding: 14px 0; }
+}

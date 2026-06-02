@@ -746,12 +746,30 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
       .bento-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 768px) {
+      .page { padding: 20px 0; }
+      .container { padding: 0 16px; }
+      .page-header h1 { font-size: 26px; }
       .bento-grid { grid-template-columns: repeat(2, 1fr); }
       .form-grid { grid-template-columns: 1fr; }
       .tabs-bar { gap: 2px; }
+      .tab-btn { padding: 8px 12px; font-size: 12px; }
+      .data-table { overflow-x: auto; }
+      .table-header, .table-row {
+        min-width: 600px;
+        font-size: 12px;
+      }
+      .appt-row { min-width: 700px; }
+      .filters { flex-direction: column; }
+      .filter-input { min-width: unset; width: 100%; }
+      .filter-select { width: 100%; }
+      .form-actions { flex-direction: column; }
+      .btn-gold-sm, .btn-outline-sm { width: 100%; justify-content: center; }
     }
     @media (max-width: 480px) {
       .bento-grid { grid-template-columns: 1fr; }
+      .stat-num { font-size: 28px; }
+      .stat-card.stat-sm .stat-num { font-size: 22px; }
+      .tabs-bar { flex-wrap: nowrap; overflow-x: auto; }
     }
   `]
 })

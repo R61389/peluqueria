@@ -268,3 +268,24 @@
     line-height: 1.5;
   }
 }
+
+@media (max-width: 768px) {
+  .hairstyle { gap: 12px; }
+  .section-header .section-title { font-size: 22px; }
+  .ranking-panel { padding: 20px 16px; border-radius: 18px; }
+  .rank-entry { gap: 14px; padding: 14px 10px; }
+  .rank-name-row .rank-style-name { font-size: 16px; }
+  .rank-name-row .rank-score { font-size: 18px; }
+  .avoid-section { padding: 18px 16px; border-radius: 16px; }
+}
+
+@media (max-width: 480px) {
+  .section-header .section-title { font-size: 20px; }
+  .ranking-panel { padding: 16px 12px; border-radius: 14px; }
+  .rank-entry { padding: 12px 8px; gap: 10px; }
+  .rank-num { width: 36px; height: 36px; font-size: 15px; }
+  .rank-name-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .rank-desc { font-size: 12px; }
+  .rank-details { gap: 4px; }
+  .detail-pill { font-size: 10px; padding: 3px 8px; }
+}

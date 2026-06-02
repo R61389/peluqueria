@@ -308,3 +308,39 @@
     text-align: right;
   }
 }
+
+@media (max-width: 768px) {
+  .face-analysis { gap: 14px; }
+  .section-header .section-title { font-size: 22px; }
+  .infographic-panel {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+  .panel-center {
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 16px 0;
+  }
+  .conf-bar-row .conf-label { flex: 0 0 90px; }
+  .skin-swatch-block { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .section-header .section-title { font-size: 20px; }
+  .infographic-panel { padding: 16px 12px; border-radius: 14px; }
+  .panel-left { gap: 10px; }
+  .face-svg { width: 140px; height: 168px; }
+  .ring-metric { margin: 4px; }
+  .ring-svg { width: 64px; height: 64px; }
+  .ring-value { font-size: 12px; top: 22px; }
+  .conf-bar-row .conf-label { flex: 0 0 80px; font-size: 10px; }
+  .char-item .char-key { font-size: 10px; }
+  .char-item .char-val { font-size: 12px; }
+}

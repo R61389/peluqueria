@@ -622,6 +622,31 @@ import { Appointment } from '../../core/models/appointment.model';
       .steps-wrap { gap: 4px; }
       .step-text { display: none; }
     }
+
+    @media (max-width: 768px) {
+      .page { padding: 20px 0; }
+      .container { padding: 0 16px; }
+      .page-header h1 { font-size: 28px; }
+      .step-actions { flex-direction: column; }
+      .btn-gold, .btn-ghost-action { width: 100%; justify-content: center; }
+      .appt-card { flex-wrap: wrap; gap: 12px; }
+      .appt-right { align-items: flex-start; }
+      .summary-box { padding: 16px; }
+    }
+
+    @media (max-width: 480px) {
+      .page-header h1 { font-size: 24px; }
+      .section-title h2 { font-size: 20px; }
+      .dates-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+      .date-btn { padding: 6px 2px; }
+      .date-num { font-size: 12px; }
+      .date-day, .date-month { font-size: 8px; }
+      .slots-grid { grid-template-columns: repeat(2, 1fr); }
+      .barber-card { padding: 16px; border-radius: 16px; }
+      .service-card { padding: 16px; border-radius: 16px; }
+      .success-screen h2 { font-size: 26px; }
+      .appt-details { padding: 16px; border-radius: 14px; }
+    }
   `]
 })
 export class AppointmentsComponent {

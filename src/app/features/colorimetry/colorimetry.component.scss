@@ -378,3 +378,30 @@
     color: #f0eff4;
   }
 }
+
+@media (max-width: 768px) {
+  .colorimetry { gap: 12px; }
+  .section-header .section-title { font-size: 22px; }
+  .season-magazine-card { padding: 20px 16px; border-radius: 18px; }
+  .season-name-large { font-size: 28px; }
+  .season-identity { gap: 14px; }
+  .season-identity .season-icon-large { font-size: 40px; }
+  .palette-strip { flex-wrap: wrap; gap: 8px; }
+  .palette-strip .strip-label { width: auto; }
+  .col-card { padding: 18px 16px; border-radius: 16px; }
+  .metals-row { gap: 8px; }
+  .char-strip { padding: 18px 16px; border-radius: 16px; }
+}
+
+@media (max-width: 480px) {
+  .section-header .section-title { font-size: 20px; }
+  .season-magazine-card { padding: 16px 12px; border-radius: 14px; }
+  .season-name-large { font-size: 24px; }
+  .season-identity { flex-direction: column; gap: 10px; }
+  .season-confidence .conf-track-inline { flex: 0 0 80px; }
+  .strip-swatch { width: 22px; height: 38px; }
+  .metal-badge { font-size: 12px; padding: 6px 12px; }
+  .big-swatch { width: 36px; height: 36px; border-radius: 10px; }
+  .char-chip { padding: 5px 10px; }
+  .char-chip .chip-text { font-size: 12px; }
+}

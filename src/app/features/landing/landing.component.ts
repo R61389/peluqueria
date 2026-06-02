@@ -828,6 +828,39 @@ import { AuthService } from '../../core/services/auth.service';
     .footer-nav a{color:rgba(240,239,244,.5);transition:color .2s}
     .footer-nav a:hover{color:#c9a96e}
     .footer-divider{opacity:.3}
+
+    @media (max-width: 768px) {
+      .hero { padding: 60px 16px 80px; }
+      .hero-title { font-size: clamp(40px, 12vw, 72px); }
+      .hero-ctas { flex-direction: column; align-items: center; }
+      .hero-stats { padding: 12px 16px; gap: 4px; }
+      .stat-item { padding: 0 12px; }
+      .stat-value { font-size: 18px; }
+      .features { padding: 60px 16px; }
+      .section-header { margin-bottom: 36px; }
+      .how-it-works { padding: 60px 16px; }
+      .social-proof { padding: 48px 16px; }
+      .proof-stats { gap: 32px; }
+      .ps-value { font-size: 36px; }
+      .testimonials { grid-template-columns: 1fr; }
+      .cta-section { padding: 80px 16px; }
+      .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+      .scissors-float { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: 48px 12px 60px; }
+      .hero-badge { font-size: 10px; padding: 6px 14px; }
+      .hero-ctas .btn-primary, .hero-ctas .btn-ghost { width: 100%; justify-content: center; }
+      .hero-stats { flex-direction: column; gap: 8px; }
+      .stat-divider { display: none; }
+      .bento-card { padding: 20px; border-radius: 16px; }
+      .card-heading { font-size: 22px; }
+      .card-inner-row { flex-direction: column; }
+      .floating-items { flex-direction: row; justify-content: center; }
+      .proof-stats { flex-direction: column; gap: 16px; }
+      .testimonial-card { padding: 20px; border-radius: 16px; }
+    }
   `],
 })
 export class LandingComponent implements OnInit, AfterViewInit {

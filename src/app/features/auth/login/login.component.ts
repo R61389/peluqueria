@@ -416,6 +416,24 @@ import { animate } from 'motion';
     .role-dot.admin { background: #c9a96e; }
     .role-dot.barber { background: #10b981; }
     .demo-cred { font-size: 10px; color: #4a4860; font-family: monospace; }
+
+    @media (max-width: 768px) {
+      .login-wrap { padding: 16px; }
+      .card { padding: 28px 20px; border-radius: 20px; }
+      .card-header h1 { font-size: 22px; }
+      .demo-items { flex-direction: column; }
+    }
+
+    @media (max-width: 480px) {
+      .login-wrap { padding: 12px; }
+      .card { padding: 20px 16px; border-radius: 16px; }
+      .card-header h1 { font-size: 20px; }
+      .card-header p { font-size: 13px; }
+      .mode-tabs button { font-size: 12px; padding: 8px; }
+      .input-wrap input { font-size: 16px; }
+      .btn-submit { font-size: 15px; padding: 14px; width: 100%; }
+      .demo-item { padding: 10px 6px; font-size: 11px; }
+    }
   `]
 })
 export class LoginComponent implements AfterViewInit {

@@ -277,6 +277,25 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
       .stats-row { grid-template-columns: repeat(2,1fr); }
       .table-header, .table-row { grid-template-columns: 80px 1fr 1fr; }
     }
+
+    @media (max-width: 768px) {
+      .page { padding: 20px 0; }
+      .container { padding: 0 16px; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .page-header h1 { font-size: 22px; }
+      .appts-table { overflow-x: auto; }
+      .appt-card { flex-wrap: wrap; gap: 10px; }
+      .appt-actions { width: 100%; }
+      .action-btn { flex: 1; text-align: center; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(2,1fr); gap: 10px; }
+      .stat-card { padding: 14px; border-radius: 12px; }
+      .stat-num { font-size: 28px; }
+      .today-badge { font-size: 11px; padding: 6px 12px; }
+      .section h2 { font-size: 18px; }
+    }
   `]
 })
 export class BarberDashboardComponent {
