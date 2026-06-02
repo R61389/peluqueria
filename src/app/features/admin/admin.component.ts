@@ -8,13 +8,14 @@ import { CatalogService } from '../../core/services/catalog.service';
 import { AppointmentStatus } from '../../core/models/appointment.model';
 import { Barber } from '../../core/models/barber.model';
 import { BarberService as BarberServiceModel } from '../../core/models/service.model';
+import { WhatsAppSettingsComponent } from '../whatsapp-settings/whatsapp-settings.component';
 
-type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
+type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users' | 'whatsapp';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, WhatsAppSettingsComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="page">
@@ -393,6 +394,15 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                 </div>
               }
             </div>
+          </div>
+        }
+
+        @if (activeTab() === 'whatsapp') {
+          <div class="section">
+            <div class="section-header">
+              <h2>WhatsApp Automático</h2>
+            </div>
+            <app-whatsapp-settings />
           </div>
         }
       </div>
@@ -785,7 +795,8 @@ export class AdminComponent {
     { id: 'appointments' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" stroke-width="1.5"/><line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" stroke-width="1.5"/><line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Citas' },
     { id: 'barbers' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 2 L6 22 M6 9 Q10 6 14 9 Q18 6 18 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>', label: 'Barberos' },
     { id: 'services' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Servicios' },
-    { id: 'users' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Usuarios' }
+    { id: 'users' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Usuarios' },
+    { id: 'whatsapp' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.137.562 4.14 1.542 5.877L0 24l6.317-1.518A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.68-.503-5.218-1.381l-.374-.22-3.749.901.927-3.65-.243-.388A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>', label: 'WhatsApp' },
   ];
 
   apptSearch = '';

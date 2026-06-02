@@ -1,9 +1,12 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Appointment, TimeSlot } from '../models/appointment.model';
+import { WhatsAppService } from './whatsapp.service';
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
   private readonly STORAGE_KEY = 'pq_appointments';
+  private readonly wa = inject(WhatsAppService);
+
   private _appointments = signal<Appointment[]>([]);
   readonly appointments = this._appointments.asReadonly();
 
@@ -24,17 +27,35 @@ export class AppointmentService {
     const newAppt: Appointment = {
       ...appointment,
       id: `appt-${Date.now()}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
     this.save([...this._appointments(), newAppt]);
+
+    // Fire-and-forget WhatsApp notifications
+    this.wa.sendAppointmentConfirmation(newAppt);
+    this.wa.sendBarberNotification(newAppt);
+
     return newAppt;
   }
 
   update(id: string, changes: Partial<Appointment>): void {
+    const prev = this._appointments().find(a => a.id === id);
     this.save(this._appointments().map(a => a.id === id ? { ...a, ...changes } : a));
+
+    if (!prev) return;
+    const updated = { ...prev, ...changes };
+
+    // Notify on status changes
+    if (changes.status === 'cancelled') {
+      this.wa.sendCancellationNotice(updated);
+    } else if (changes.date || changes.time) {
+      this.wa.sendModificationNotice(updated);
+    }
   }
 
   delete(id: string): void {
+    const appt = this._appointments().find(a => a.id === id);
+    if (appt) this.wa.sendCancellationNotice(appt);
     this.save(this._appointments().filter(a => a.id !== id));
   }
 

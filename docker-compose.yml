@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # ── Angular App ────────────────────────────────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - openwa
+    environment:
+      - OPENWA_URL=http://openwa:3000
+
+  # ── OpenWA WhatsApp Gateway ────────────────────────────────────────────────
+  openwa:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - openwa_sessions:/app/.wwebjs_auth
+      - openwa_data:/app/data
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=sqlite:./data/openwa.db
+    command: >
+      sh -c "
+        git clone https://github.com/rmyndharis/OpenWA.git . 2>/dev/null || true &&
+        npm install --omit=dev &&
+        npm run start:prod
+      "
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  openwa_sessions:
+  openwa_data:
