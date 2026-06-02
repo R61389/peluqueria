@@ -21,18 +21,20 @@ type CategoryFilter = 'todos' | 'short' | 'medium' | 'long';
 interface HairColor { hex: string; name: string; nameEs: string; }
 
 const HAIR_COLORS: HairColor[] = [
-  { hex: '#080503', name: 'Jet Black',    nameEs: 'Negro azabache' },
-  { hex: '#2c1810', name: 'Dark Brown',   nameEs: 'Castaño oscuro' },
-  { hex: '#5c3317', name: 'Brown',        nameEs: 'Castaño'        },
-  { hex: '#8b5e3c', name: 'Light Brown',  nameEs: 'Castaño claro'  },
-  { hex: '#b8762e', name: 'Dark Blonde',  nameEs: 'Rubio oscuro'   },
-  { hex: '#d4a843', name: 'Blonde',       nameEs: 'Rubio'          },
-  { hex: '#ede0b2', name: 'Platinum',     nameEs: 'Platino'        },
-  { hex: '#8b1a1a', name: 'Dark Red',     nameEs: 'Rojo oscuro'    },
-  { hex: '#c0392b', name: 'Red',          nameEs: 'Rojo'           },
-  { hex: '#606060', name: 'Gray',         nameEs: 'Gris'           },
-  { hex: '#f0f0f0', name: 'White',        nameEs: 'Blanco'         },
-  { hex: '#1a2a6c', name: 'Navy Blue',    nameEs: 'Azul marino'    },
+  { hex: '#080503', name: 'jet black',        nameEs: 'Negro azabache'  },
+  { hex: '#2c1810', name: 'rich espresso brown', nameEs: 'Castaño oscuro' },
+  { hex: '#5c3317', name: 'warm chestnut brown', nameEs: 'Castaño'        },
+  { hex: '#8b5e3c', name: 'golden brown',     nameEs: 'Castaño claro'   },
+  { hex: '#b8762e', name: 'warm honey blonde', nameEs: 'Rubio miel'      },
+  { hex: '#d4a843', name: 'golden blonde',    nameEs: 'Rubio dorado'    },
+  { hex: '#ede0b2', name: 'platinum blonde',  nameEs: 'Platino'         },
+  { hex: '#8b1a1a', name: 'deep burgundy red', nameEs: 'Burdeos'         },
+  { hex: '#c0392b', name: 'vibrant red',      nameEs: 'Rojo vibrante'   },
+  { hex: '#606060', name: 'silver gray',      nameEs: 'Gris plata'      },
+  { hex: '#f0f0f0', name: 'pearl white',      nameEs: 'Blanco perla'    },
+  { hex: '#1a2a6c', name: 'navy blue',        nameEs: 'Azul marino'     },
+  { hex: '#2d1b69', name: 'deep violet',      nameEs: 'Violeta'         },
+  { hex: '#1a4a1a', name: 'forest green',     nameEs: 'Verde bosque'    },
 ];
 
 @Component({
@@ -773,7 +775,7 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
         hairstyleLabel: style.label,
         faceShape: shape,
         hairColor: color.hex,
-        hairColorName: color.nameEs,
+        hairColorName: color.name,
       });
       console.log('[STEP 7] aiService.generate() completado');
     } catch (err) {
