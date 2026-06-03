@@ -98,6 +98,14 @@ import { animate } from 'motion';
             <input type="text" formControlName="name" placeholder="Tu nombre">
           </div>
         </div>
+        <div class="form-group">
+        <label>Género</label>
+        <select formControlName="gender" class="form-input">
+          <option value="">Prefiero no decir</option>
+          <option value="male">Masculino</option>
+          <option value="female">Femenino</option>
+        </select>
+      </div>
         <div class="field">
           <label>Correo electrónico</label>
           <div class="input-wrap">
@@ -457,7 +465,8 @@ export class LoginComponent implements AfterViewInit {
     name: ['', [Validators.required, Validators.minLength(2)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(6)]],
-    confirmPassword: ['', Validators.required]
+    confirmPassword: ['', Validators.required],
+    gender: ['']
   });
 
   ngAfterViewInit(): void {
@@ -491,9 +500,9 @@ export class LoginComponent implements AfterViewInit {
         this.error.set(result.error!);
       }
     } else {
-      const { name, email, password, confirmPassword } = this.registerForm.value;
+      const { name, email, password, confirmPassword, gender } = this.registerForm.value;
       if (password !== confirmPassword) { this.error.set('Las contraseñas no coinciden'); this.loading.set(false); return; }
-      const result = this.auth.register(name!, email!, password!);
+      const result = this.auth.register(name!, email!, password!, (gender as 'male' | 'female') || undefined);
       this.loading.set(false);
       if (result.success) this.router.navigate(['/advisor']);
       else this.error.set(result.error!);

@@ -7,6 +7,7 @@ export interface User {
   passwordHash: string;
   role: UserRole;
   phone?: string;
+  gender?: 'male' | 'female';
   avatar?: string;
   createdAt: string;
 }

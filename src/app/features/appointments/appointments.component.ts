@@ -118,7 +118,7 @@ import { Appointment } from '../../core/models/appointment.model';
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><polyline points="12,6 12,12 16,14" stroke="currentColor" stroke-width="1.5"/></svg>
                           {{ svc.duration }} min
                         </div>
-                        <span class="svc-price">\${{ svc.price }}</span>
+                        <span class="svc-price">Bs. {{ svc.price }}</span>
                       </div>
                     </div>
                   </div>
@@ -195,13 +195,13 @@ import { Appointment } from '../../core/models/appointment.model';
                     <div class="summary-row"><span>Servicio</span><strong>{{ selectedService()?.name }}</strong></div>
                     <div class="summary-row"><span>Fecha</span><strong>{{ selectedDate() }}</strong></div>
                     <div class="summary-row"><span>Hora</span><strong>{{ selectedTime() }}</strong></div>
-                    <div class="summary-row summary-price"><span>Total</span><strong class="price">\${{ selectedService()?.price }}</strong></div>
+                    <div class="summary-row summary-price"><span>Total</span><strong class="price">Bs. {{ selectedService()?.price }}</strong></div>
                   </div>
                   <!-- Phone for barber contact -->
                   <div class="phone-row">
                     <label class="phone-label">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.4 2 2 0 0 1 3.6 1.21h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.79a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                      Tu teléfono <span class="phone-optional">(opcional — para que el barbero te contacte)</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.137.562 4.14 1.542 5.877L0 24l6.317-1.518A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.9 0-3.68-.503-5.218-1.381l-.374-.22-3.749.901.927-3.65-.243-.388A9.946 9.946 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+                      WhatsApp <span class="phone-optional">(opcional — para que el barbero te contacte)</span>
                     </label>
                     <input
                       class="phone-input"
@@ -239,7 +239,7 @@ import { Appointment } from '../../core/models/appointment.model';
               <div class="detail-row"><span>Servicio</span><strong>{{ bookedAppointment()!.serviceName }}</strong></div>
               <div class="detail-row"><span>Fecha</span><strong>{{ bookedAppointment()!.date }}</strong></div>
               <div class="detail-row"><span>Hora</span><strong>{{ bookedAppointment()!.time }}</strong></div>
-              <div class="detail-row"><span>Precio</span><strong class="price">\${{ bookedAppointment()!.price }}</strong></div>
+              <div class="detail-row"><span>Precio</span><strong class="price">Bs. {{ bookedAppointment()!.price }}</strong></div>
               <div class="detail-row"><span>Estado</span>
                 <span class="status-badge status-pending">Pendiente</span>
               </div>
@@ -271,7 +271,7 @@ import { Appointment } from '../../core/models/appointment.model';
                   </div>
                   <div class="appt-right">
                     <span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span>
-                    <span class="appt-price">\${{ appt.price }}</span>
+                    <span class="appt-price">Bs. {{ appt.price }}</span>
                   </div>
                 </div>
               }
@@ -692,7 +692,16 @@ export class AppointmentsComponent {
   ];
 
   activeBarbers = computed(() => this.barberSvc.barbers().filter(b => b.active));
-  activeServices = computed(() => this.catalogSvc.services().filter(s => s.active));
+  activeServices = computed(() => {
+    const user = this.auth.currentUser();
+    const gender = user?.gender;
+    return this.catalogSvc.services().filter(s => {
+      if (!s.active) return false;
+      if (!s.targetGender || s.targetGender === 'unisex') return true;
+      if (!gender) return true; // no gender set, show all
+      return s.targetGender === gender;
+    });
+  });
   myAppointments = computed(() => {
     const user = this.auth.currentUser();
     if (!user) return [];
@@ -773,6 +782,15 @@ export class AppointmentsComponent {
       status: 'pending',
       price: service.price,
     });
+    // Attach hairstyle preview if client saved one
+    const preview = localStorage.getItem('pq_hairstyle_preview');
+    if (preview) {
+      try {
+        const p = JSON.parse(preview) as { imageUrl: string };
+        this.apptService.update(appt.id, { hairstyleImageUrl: p.imageUrl });
+        localStorage.removeItem('pq_hairstyle_preview');
+      } catch {}
+    }
     this.bookedAppointment.set(appt);
   }
 

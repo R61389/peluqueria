@@ -77,7 +77,7 @@ export class AuthService {
     return { success: true };
   }
 
-  register(name: string, email: string, password: string): { success: boolean; error?: string } {
+  register(name: string, email: string, password: string, gender?: 'male' | 'female'): { success: boolean; error?: string } {
     const users = this.getUsers();
     if (users.find(u => u.email === email)) {
       return { success: false, error: 'Este email ya está registrado' };
@@ -88,6 +88,7 @@ export class AuthService {
       email,
       passwordHash: btoa(password),
       role: 'user',
+      gender,
       createdAt: new Date().toISOString()
     };
     users.push(newUser);

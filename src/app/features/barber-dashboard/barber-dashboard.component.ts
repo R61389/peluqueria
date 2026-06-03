@@ -60,6 +60,9 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
                       <a class="client-phone" [href]="'tel:' + appt.clientPhone">📞 {{ appt.clientPhone }}</a>
                     }
                   </div>
+                  @if (appt.hairstyleImageUrl) {
+                    <img class="hairstyle-thumb" [src]="appt.hairstyleImageUrl" alt="Peinado solicitado" title="Peinado solicitado por el cliente"/>
+                  }
                   <span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span>
                   <div class="appt-actions">
                     @if (appt.status === 'pending') {
@@ -101,6 +104,9 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
                       <a class="client-phone" [href]="'tel:' + appt.clientPhone">📞 {{ appt.clientPhone }}</a>
                     }
                   </div>
+                  @if (appt.hairstyleImageUrl) {
+                    <img class="hairstyle-thumb" [src]="appt.hairstyleImageUrl" alt="Peinado solicitado" title="Peinado solicitado por el cliente"/>
+                  }
                   <span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span>
                   <div class="appt-actions">
                     @if (appt.status === 'pending') {
@@ -214,6 +220,7 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
     .appt-info span { color: #9997b0; font-size: 13px; }
     .client-phone { display: inline-block; margin-top: 3px; font-size: 12px; color: #c9a96e; text-decoration: none; }
     .client-phone:hover { text-decoration: underline; }
+    .hairstyle-thumb { width:48px; height:48px; border-radius:8px; object-fit:cover; border:1px solid rgba(201,169,110,0.3); flex-shrink:0; cursor:pointer; }
     .appt-actions { display: flex; gap: 8px; }
     .action-btn {
       padding: 6px 14px;

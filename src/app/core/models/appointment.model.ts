@@ -20,4 +20,5 @@ export interface Appointment {
   notes?: string;
   createdAt: string;
   price: number;
+  hairstyleImageUrl?: string;
 }

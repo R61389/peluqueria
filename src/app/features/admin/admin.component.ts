@@ -77,7 +77,7 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
                   <span>Hoy</span>
                 </div>
               </div>
-              <div class="stat-num">\${{ todayRevenue() }}</div>
+              <div class="stat-num">Bs. {{ todayRevenue() }}</div>
               <div class="stat-label">Ingresos hoy</div>
             </div>
 

@@ -5,5 +5,6 @@ export interface BarberService {
   duration: number;
   price: number;
   category: 'haircut' | 'beard' | 'color' | 'treatment' | 'combo';
+  targetGender?: 'male' | 'female' | 'unisex';
   active: boolean;
 }

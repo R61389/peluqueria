@@ -314,6 +314,10 @@ localStorage.setItem('hf_api_key', 'hf_TU_CLAVE')</code>
             </svg>
             Exportar reporte
           </button>
+          <button class="btn-save-barber" (click)="saveForBarber()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar para barbero
+          </button>
           <button class="btn-ghost" (click)="aiService.reset(); generate()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
               <path d="M4 4v5h5M20 20v-5h-5M20 9A9 9 0 0 0 5.64 5.64M4 15a9 9 0 0 0 14.36 3.36"
@@ -322,6 +326,9 @@ localStorage.setItem('hf_api_key', 'hf_TU_CLAVE')</code>
             Re-generar
           </button>
         </div>
+        @if (savedForBarber()) {
+          <p class="saved-msg">✅ Guardado — se adjuntará automáticamente en tu próxima cita</p>
+        }
       </div>
 
       <app-hairstyle-preview
@@ -558,6 +565,14 @@ localStorage.setItem('hf_api_key', 'hf_TU_CLAVE')</code>
       color:#c9a96e; font-size:13px; font-weight:600; cursor:pointer;
     }
     .btn-download:hover { background:rgba(201,169,110,0.2); }
+    .btn-save-barber {
+      display:flex; align-items:center; gap:6px;
+      padding:8px 16px; border-radius:8px;
+      background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3);
+      color:#a78bfa; font-size:13px; font-weight:600; cursor:pointer;
+    }
+    .btn-save-barber:hover { background:rgba(139,92,246,0.18); }
+    .saved-msg { font-size:12px; color:#4ade80; margin:6px 0 0; }
     .btn-report {
       display:flex; align-items:center; gap:6px;
       padding:8px 16px; border-radius:8px;
@@ -601,6 +616,7 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
   readonly preloadedAnalysis = input<FaceAnalysisResult | null>(null);
 
   private hasAutoTriggered = signal(false);
+  savedForBarber = signal(false);
 
   constructor() {
     // Cuando Asesoría IA pasa foto + análisis, precargamos y auto-generamos
@@ -811,6 +827,19 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
       console.error('[STEP 7] aiService.generate() FALLÓ:', err);
       // error ya está en aiService.progress (status: 'error')
     }
+  }
+
+  saveForBarber(): void {
+    const result = this.aiService.result();
+    if (!result) return;
+    localStorage.setItem('pq_hairstyle_preview', JSON.stringify({
+      imageUrl: result.generatedImage,
+      styleLabel: this.selectedStyle()?.labelEs ?? '',
+      colorName: this.selectedColor()?.nameEs ?? '',
+      savedAt: new Date().toISOString(),
+    }));
+    this.savedForBarber.set(true);
+    setTimeout(() => this.savedForBarber.set(false), 3000);
   }
 
   download(): void {
