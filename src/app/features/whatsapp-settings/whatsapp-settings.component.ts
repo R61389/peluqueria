@@ -62,7 +62,7 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
           Verificar conexión
         }
       </button>
-      @if (configUrl) {
+      @if (configApiKey) {
         <button class="btn-clear" (click)="clearConfig()">Desconectar</button>
       }
     </div>
@@ -94,6 +94,9 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
         <button class="btn-qr" (click)="loadQr()">
           📱 Cargar código QR
         </button>
+        @if (qrError()) {
+          <p class="qr-error">{{ qrError() }}</p>
+        }
         <p class="qr-pre-hint">Asegúrate de haber ejecutado <code>docker compose up -d openwa</code> primero</p>
       }
     </div>
@@ -232,6 +235,7 @@ POST http://localhost:3000/api/sessions/peluqueria/start</pre>
     .qr-img   { width: 220px; height: 220px; border-radius: 12px; background: white; padding: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
     .btn-qr   { margin-top: 14px; padding: 12px 28px; border-radius: 10px; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.35); color: #25D366; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
     .btn-qr:hover { background: rgba(37,211,102,0.2); }
+    .qr-error { margin: 10px 0 0; font-size: 12px; color: #f87171; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 8px 12px; }
     .btn-refresh { margin-top: 0; padding: 8px 18px; font-size: 12px; }
     .connected-banner { padding: 14px 18px; border-radius: 12px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25); color: #4ade80; font-size: 14px; font-weight: 600; text-align: center; }
 
@@ -281,6 +285,7 @@ export class WhatsAppSettingsComponent implements OnInit {
   testing    = signal(false);
   testResult = signal<string | null>(null);
   qrCode     = signal<string | null>(null);
+  qrError    = signal<string | null>(null);
   showQr     = signal(false);
 
   readonly features = [
@@ -293,7 +298,7 @@ export class WhatsAppSettingsComponent implements OnInit {
   ];
 
   ngOnInit(): void {
-    if (this.configUrl) this.wa.checkStatus();
+    if (this.configApiKey) this.wa.checkStatus();
   }
 
   saveConfig(): void {
@@ -318,9 +323,13 @@ export class WhatsAppSettingsComponent implements OnInit {
   }
 
   async loadQr(): Promise<void> {
+    this.qrError.set(null);
+    this.qrCode.set(null);
     const qr = await this.wa.getQrCode();
     if (qr) {
       this.qrCode.set(qr.startsWith('data:') ? qr : `data:image/png;base64,${qr}`);
+    } else {
+      this.qrError.set('No se pudo obtener el QR. Verifica que OpenWA está corriendo y que la API Key y el ID de sesión son correctos.');
     }
     this.showQr.set(true);
   }
@@ -328,9 +337,13 @@ export class WhatsAppSettingsComponent implements OnInit {
   clearConfig(): void {
     localStorage.removeItem('openwa_url');
     localStorage.removeItem('openwa_session');
+    localStorage.removeItem('openwa_api_key');
     this.configUrl = '';
+    this.configApiKey = '';
     this.wa.status.set('disabled');
     this.testResult.set(null);
+    this.qrCode.set(null);
+    this.qrError.set(null);
   }
 
   statusLabel(): string {
