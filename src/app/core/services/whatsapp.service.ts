@@ -4,6 +4,7 @@ import { Appointment } from '../models/appointment.model';
 export interface WaConfig {
   baseUrl: string;
   sessionId: string;
+  apiKey: string;
 }
 
 export type WaStatus = 'unknown' | 'connecting' | 'ready' | 'offline' | 'disabled';
@@ -16,11 +17,18 @@ export class WhatsAppService {
     return {
       baseUrl: localStorage.getItem('openwa_url') ?? 'http://localhost:3000',
       sessionId: localStorage.getItem('openwa_session') ?? 'peluqueria',
+      apiKey: localStorage.getItem('openwa_api_key') ?? '',
     };
   }
 
   get isEnabled(): boolean {
     return !!localStorage.getItem('openwa_url');
+  }
+
+  private get headers(): Record<string, string> {
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.config.apiKey) h['x-api-key'] = this.config.apiKey;
+    return h;
   }
 
   // ── Session management ────────────────────────────────────────────────────
@@ -34,7 +42,7 @@ export class WhatsAppService {
       this.status.set('connecting');
       const res = await fetch(
         `${this.config.baseUrl}/api/sessions/${this.config.sessionId}`,
-        { signal: AbortSignal.timeout(5000) },
+        { headers: this.headers, signal: AbortSignal.timeout(5000) },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json() as { status?: string };
@@ -51,6 +59,7 @@ export class WhatsAppService {
     try {
       const res = await fetch(
         `${this.config.baseUrl}/api/sessions/${this.config.sessionId}/qr`,
+        { headers: this.headers },
       );
       if (!res.ok) return null;
       const data = await res.json() as { qr?: string };
@@ -118,7 +127,7 @@ export class WhatsAppService {
         `${this.config.baseUrl}/api/sessions/${this.config.sessionId}/messages/send-text`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: this.headers,
           body: JSON.stringify({ chatId: `${normalized}@c.us`, contentType: 'string', content: message }),
         },
       );

@@ -52,6 +52,18 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
         placeholder="peluqueria"
       />
     </div>
+    <div class="form-row">
+      <label class="form-label">API Key</label>
+      <div class="input-group">
+        <input
+          class="form-input"
+          type="password"
+          [(ngModel)]="configApiKey"
+          placeholder="owa_k1_..."
+        />
+        <span class="input-hint">Aparece en los logs de Docker al arrancar OpenWA</span>
+      </div>
+    </div>
 
     <div class="form-actions">
       <button class="btn-save" (click)="saveConfig()">Guardar configuración</button>
@@ -276,6 +288,7 @@ export class WhatsAppSettingsComponent implements OnInit {
 
   configUrl     = localStorage.getItem('openwa_url')     ?? '';
   configSession = localStorage.getItem('openwa_session') ?? 'peluqueria';
+  configApiKey  = localStorage.getItem('openwa_api_key') ?? '';
 
   testing    = signal(false);
   testResult = signal<string | null>(null);
@@ -298,6 +311,7 @@ export class WhatsAppSettingsComponent implements OnInit {
   saveConfig(): void {
     localStorage.setItem('openwa_url', this.configUrl.trim());
     localStorage.setItem('openwa_session', this.configSession.trim() || 'peluqueria');
+    if (this.configApiKey.trim()) localStorage.setItem('openwa_api_key', this.configApiKey.trim());
     this.testResult.set(null);
   }
 
