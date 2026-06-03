@@ -100,7 +100,7 @@ export class AuthService {
   logout(): void {
     this._currentUser.set(null);
     localStorage.removeItem(this.SESSION_KEY);
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
   getAllUsers(): User[] {
