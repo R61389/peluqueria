@@ -22,7 +22,7 @@ export class WhatsAppService {
   }
 
   get isEnabled(): boolean {
-    return !!localStorage.getItem('openwa_url');
+    return !!localStorage.getItem('openwa_api_key');
   }
 
   private get headers(): Record<string, string> {

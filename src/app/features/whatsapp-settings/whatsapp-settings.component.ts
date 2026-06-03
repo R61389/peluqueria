@@ -32,18 +32,6 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
   <!-- Connection form -->
   <div class="form-section">
     <div class="form-row">
-      <label class="form-label">URL del servidor OpenWA</label>
-      <div class="input-group">
-        <input
-          class="form-input"
-          type="url"
-          [(ngModel)]="configUrl"
-          placeholder="http://localhost:3000"
-        />
-        <span class="input-hint">Ej: http://tu-servidor:3000</span>
-      </div>
-    </div>
-    <div class="form-row">
       <label class="form-label">ID de sesión</label>
       <input
         class="form-input"
@@ -92,7 +80,7 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
 
   <!-- QR Code section -->
   <!-- QR section — visible whenever a URL is configured and not yet ready -->
-  @if (configUrl && status() !== 'ready') {
+  @if (configApiKey && status() !== 'ready') {
     <div class="qr-section">
       <h4 class="qr-title">Vincular WhatsApp</h4>
       <p class="qr-hint">1 · Guarda la configuración &nbsp;·&nbsp; 2 · Carga el QR &nbsp;·&nbsp; 3 · Escanéalo con tu celular</p>
