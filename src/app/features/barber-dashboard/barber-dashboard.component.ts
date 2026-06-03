@@ -56,6 +56,9 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
                   <div class="appt-info">
                     <strong>{{ appt.userName }}</strong>
                     <span>{{ appt.serviceName }}</span>
+                    @if (appt.clientPhone) {
+                      <a class="client-phone" [href]="'tel:' + appt.clientPhone">📞 {{ appt.clientPhone }}</a>
+                    }
                   </div>
                   <span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span>
                   <div class="appt-actions">
@@ -94,6 +97,9 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
                   <div class="appt-info">
                     <strong>{{ appt.userName }}</strong>
                     <span>{{ appt.serviceName }}</span>
+                    @if (appt.clientPhone) {
+                      <a class="client-phone" [href]="'tel:' + appt.clientPhone">📞 {{ appt.clientPhone }}</a>
+                    }
                   </div>
                   <span class="status-badge status-{{ appt.status }}">{{ statusLabel(appt.status) }}</span>
                   <div class="appt-actions">
@@ -206,6 +212,8 @@ import { Appointment, AppointmentStatus } from '../../core/models/appointment.mo
     .appt-info { flex: 1; }
     .appt-info strong { display: block; color: #f0eff4; font-size: 14px; font-weight: 600; }
     .appt-info span { color: #9997b0; font-size: 13px; }
+    .client-phone { display: inline-block; margin-top: 3px; font-size: 12px; color: #c9a96e; text-decoration: none; }
+    .client-phone:hover { text-decoration: underline; }
     .appt-actions { display: flex; gap: 8px; }
     .action-btn {
       padding: 6px 14px;

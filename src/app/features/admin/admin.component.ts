@@ -865,8 +865,9 @@ export class AdminComponent {
   }
   saveBarber(): void {
     const editing = this.editingBarber();
+    const newId = editing?.id ?? `barber-${Date.now()}`;
     const data: Barber = {
-      id: editing?.id ?? `barber-${Date.now()}`,
+      id: newId,
       name: this.barberForm.name,
       email: this.barberForm.email,
       phone: this.barberForm.phone,
@@ -877,15 +878,26 @@ export class AdminComponent {
       rating: editing?.rating ?? 5,
       reviewCount: editing?.reviewCount ?? 0
     };
-    if (editing) this.barberSvc.update(data.id, data);
-    else this.barberSvc.create(data);
+    if (editing) {
+      this.barberSvc.update(data.id, data);
+    } else {
+      this.barberSvc.create(data);
+      // Create matching user account so the barber can log in
+      const result = this.auth.createBarberUser(newId, data.name, data.email, data.phone);
+      if (!result.success) {
+        alert(`Barbero creado pero no se pudo crear la cuenta: ${result.error}`);
+      }
+    }
     this.showBarberForm.set(false);
   }
   toggleBarber(barber: Barber): void {
     this.barberSvc.update(barber.id, { active: !barber.active });
   }
   deleteBarber(id: string): void {
-    if (confirm('¿Eliminar barbero?')) this.barberSvc.delete(id);
+    if (confirm('¿Eliminar barbero? También se eliminará su cuenta de acceso.')) {
+      this.barberSvc.delete(id);
+      this.auth.removeBarberUser(id);
+    }
   }
 
   // Services

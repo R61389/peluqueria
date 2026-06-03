@@ -9,6 +9,7 @@ export interface Appointment {
   id: string;
   userId: string;
   userName: string;
+  clientPhone?: string;
   barberId: string;
   barberName: string;
   serviceId: string;

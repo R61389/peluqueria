@@ -103,6 +103,30 @@ export class AuthService {
     this.router.navigate(['/']);
   }
 
+  createBarberUser(id: string, name: string, email: string, phone: string): { success: boolean; error?: string } {
+    const users = this.getUsers();
+    if (users.find(u => u.email === email)) {
+      return { success: false, error: 'Este email ya está registrado' };
+    }
+    const newUser: User = {
+      id,
+      name,
+      email,
+      passwordHash: btoa('barber123'),
+      role: 'barber',
+      phone,
+      createdAt: new Date().toISOString(),
+    };
+    users.push(newUser);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
+    return { success: true };
+  }
+
+  removeBarberUser(id: string): void {
+    const users = this.getUsers().filter(u => u.id !== id);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(users));
+  }
+
   getAllUsers(): User[] {
     return this.getUsers();
   }
