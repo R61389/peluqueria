@@ -8,7 +8,7 @@ import { CatalogService } from '../../core/services/catalog.service';
 import { AppointmentStatus } from '../../core/models/appointment.model';
 import { Barber } from '../../core/models/barber.model';
 import { BarberService as BarberServiceModel } from '../../core/models/service.model';
-type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
+type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users' | 'config';
 
 @Component({
   selector: 'app-admin',
@@ -395,6 +395,38 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
           </div>
         }
 
+        @if (activeTab() === 'config') {
+          <div class="section">
+            <div class="section-header"><h2>Configuración</h2></div>
+
+            <div class="config-card">
+              <div class="config-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a96e" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0"/></svg>
+                API Key de Replicate (IA de peinados)
+              </div>
+              <p class="config-desc">Necesaria para generar imágenes con IA. Obtén tu clave en <strong>replicate.com</strong> → Account → API tokens.</p>
+              <div class="config-row">
+                <input class="config-input" type="password" [(ngModel)]="replicateKey" placeholder="r8_xxxxxxxxxxxxxxxxxx" />
+                <button class="btn-config-save" (click)="saveReplicateKey()">Guardar</button>
+              </div>
+              @if (replicateKeySaved()) {
+                <p class="config-saved">✅ Clave guardada — la IA ya está activa en este dispositivo</p>
+              }
+              @if (replicateKey && !replicateKeySaved()) {
+                <p class="config-hint">Clave actual configurada. Ingresa una nueva para reemplazarla.</p>
+              }
+            </div>
+
+            <div class="config-card config-info">
+              <div class="config-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9997b0" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01" stroke-linecap="round"/></svg>
+                Sobre el almacenamiento de datos
+              </div>
+              <p class="config-desc">Los usuarios, citas y configuración se guardan <strong>localmente en cada dispositivo</strong>. Esto significa que los datos del celular no se sincronizan automáticamente con la PC. Para un entorno multiusuario real se necesita un servidor backend.</p>
+            </div>
+          </div>
+        }
+
       </div>
     </div>
   `,
@@ -742,6 +774,18 @@ type Tab = 'dashboard' | 'appointments' | 'barbers' | 'services' | 'users';
     }
     .btn-outline-sm:hover { color: #f0eff4; border-color: rgba(255,255,255,0.2); }
 
+    .config-card { padding: 20px; border-radius: 14px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px; }
+    .config-card.config-info { border-color: rgba(153,151,176,0.15); }
+    .config-title { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #f0eff4; }
+    .config-desc { font-size: 13px; color: #9997b0; line-height: 1.6; margin: 0; }
+    .config-desc strong { color: #f0eff4; }
+    .config-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .config-input { flex: 1; min-width: 200px; padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #f0eff4; font-size: 13px; font-family: monospace; outline: none; }
+    .config-input:focus { border-color: rgba(201,169,110,0.4); }
+    .btn-config-save { padding: 10px 22px; border-radius: 10px; border: none; background: linear-gradient(135deg,#c9a96e,#a07840); color: #080810; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .config-saved { font-size: 12px; color: #4ade80; margin: 0; }
+    .config-hint { font-size: 12px; color: #9997b0; margin: 0; }
+
     @media (max-width: 900px) {
       .bento-grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -786,7 +830,20 @@ export class AdminComponent {
     { id: 'barbers' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 2 L6 22 M6 9 Q10 6 14 9 Q18 6 18 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>', label: 'Barberos' },
     { id: 'services' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Servicios' },
     { id: 'users' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Usuarios' },
+    { id: 'config' as Tab, icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M19.07 4.93a10 10 0 0 0-14.14 0M4.93 19.07a10 10 0 0 0 14.14 0" stroke="currentColor" stroke-width="1.5"/></svg>', label: 'Config' },
   ];
+
+  // Config tab
+  replicateKey = localStorage.getItem('replicate_api_key') ?? '';
+  replicateKeySaved = signal(false);
+
+  saveReplicateKey(): void {
+    const key = this.replicateKey.trim();
+    if (!key) return;
+    localStorage.setItem('replicate_api_key', key);
+    this.replicateKeySaved.set(true);
+    setTimeout(() => this.replicateKeySaved.set(false), 3000);
+  }
 
   apptSearch = '';
   apptStatusFilter = '';
