@@ -21,5 +21,5 @@ RUN npm run build
 RUN node /tmp/patch-puppeteer.js
 
 EXPOSE 3000
-CMD ["npm", "run", "start:prod"]
+CMD find /app/.wwebjs_auth -name "Singleton*" -delete 2>/dev/null; npm run start:prod
 
