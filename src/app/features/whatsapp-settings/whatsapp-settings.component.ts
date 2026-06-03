@@ -79,17 +79,29 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
   </div>
 
   <!-- QR Code section -->
-  @if (status() === 'connecting' || showQr()) {
+  <!-- QR section — visible whenever a URL is configured and not yet ready -->
+  @if (configUrl && status() !== 'ready') {
     <div class="qr-section">
-      <h4 class="qr-title">Escanea el código QR con WhatsApp</h4>
-      <p class="qr-hint">Abre WhatsApp → Dispositivos vinculados → Vincular dispositivo</p>
+      <h4 class="qr-title">Vincular WhatsApp</h4>
+      <p class="qr-hint">1 · Guarda la configuración &nbsp;·&nbsp; 2 · Carga el QR &nbsp;·&nbsp; 3 · Escanéalo con tu celular</p>
+      <p class="qr-hint">En WhatsApp: <strong>⋮ → Dispositivos vinculados → Vincular dispositivo</strong></p>
       @if (qrCode()) {
         <div class="qr-container">
           <img [src]="qrCode()!" alt="QR Code WhatsApp" class="qr-img"/>
+          <button class="btn-qr btn-refresh" (click)="loadQr()">🔄 Actualizar QR</button>
         </div>
       } @else {
-        <button class="btn-qr" (click)="loadQr()">Cargar código QR</button>
+        <button class="btn-qr" (click)="loadQr()">
+          📱 Cargar código QR
+        </button>
+        <p class="qr-pre-hint">Asegúrate de haber ejecutado <code>docker compose up -d openwa</code> primero</p>
       }
+    </div>
+  }
+
+  @if (status() === 'ready') {
+    <div class="connected-banner">
+      ✅ WhatsApp conectado y listo para enviar mensajes automáticos
     </div>
   }
 
@@ -210,12 +222,18 @@ POST http://localhost:3000/api/sessions/peluqueria/start</pre>
     .test-result.success { background: rgba(74,222,128,0.08); color: #4ade80; border: 1px solid rgba(74,222,128,0.2); }
     .test-result.error   { background: rgba(248,113,113,0.08); color: #f87171; border: 1px solid rgba(248,113,113,0.2); }
 
-    .qr-section { text-align: center; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 12px; }
-    .qr-title { margin: 0 0 6px; font-size: 14px; color: #f0eff4; }
-    .qr-hint  { margin: 0 0 14px; font-size: 12px; color: #9997b0; }
-    .qr-container { display: flex; justify-content: center; }
-    .qr-img   { width: 200px; height: 200px; border-radius: 12px; background: white; padding: 8px; }
-    .btn-qr   { padding: 10px 24px; border-radius: 10px; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.3); color: #25D366; font-size: 13px; cursor: pointer; }
+    .qr-section { text-align: center; padding: 20px; background: rgba(37,211,102,0.04); border: 1px solid rgba(37,211,102,0.15); border-radius: 12px; }
+    .qr-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; color: #f0eff4; }
+    .qr-hint  { margin: 0 0 6px; font-size: 12px; color: #9997b0; line-height: 1.5; }
+    .qr-hint strong { color: #f0eff4; }
+    .qr-pre-hint { margin: 10px 0 0; font-size: 11px; color: #6b6980; }
+    .qr-pre-hint code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 4px; color: #c9a96e; }
+    .qr-container { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 14px; }
+    .qr-img   { width: 220px; height: 220px; border-radius: 12px; background: white; padding: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+    .btn-qr   { margin-top: 14px; padding: 12px 28px; border-radius: 10px; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.35); color: #25D366; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+    .btn-qr:hover { background: rgba(37,211,102,0.2); }
+    .btn-refresh { margin-top: 0; padding: 8px 18px; font-size: 12px; }
+    .connected-banner { padding: 14px 18px; border-radius: 12px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25); color: #4ade80; font-size: 14px; font-weight: 600; text-align: center; }
 
     .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .feature-item {
