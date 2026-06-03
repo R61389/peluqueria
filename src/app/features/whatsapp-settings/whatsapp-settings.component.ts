@@ -92,10 +92,23 @@ import { WhatsAppService, WaStatus } from '../../core/services/whatsapp.service'
         </div>
       } @else {
         <button class="btn-qr" (click)="loadQr()">
-          📱 Cargar código QR
+          📱 Cargar código QR automáticamente
         </button>
         @if (qrError()) {
           <p class="qr-error">{{ qrError() }}</p>
+          <details class="manual-qr-details">
+            <summary class="manual-qr-summary">📋 Pegar QR manualmente (alternativa)</summary>
+            <div class="manual-qr-body">
+              <p class="manual-qr-hint">Ejecuta este comando en tu terminal y pega el valor de <code>qrCode</code> aquí:</p>
+              <pre class="code-block">curl http://localhost:3000/api/sessions/{{ configSession || 'TU_SESSION_ID' }}/qr -H "x-api-key: {{ configApiKey }}"</pre>
+              <textarea
+                class="qr-paste-input"
+                rows="3"
+                placeholder="Pega aquí el valor de qrCode (empieza con data:image/png;base64,... o iVBOR...)"
+                (input)="onQrPaste($event)"
+              ></textarea>
+            </div>
+          </details>
         }
         <p class="qr-pre-hint">Asegúrate de haber ejecutado <code>docker compose up -d openwa</code> primero</p>
       }
@@ -236,6 +249,18 @@ POST http://localhost:3000/api/sessions/peluqueria/start</pre>
     .btn-qr   { margin-top: 14px; padding: 12px 28px; border-radius: 10px; background: rgba(37,211,102,0.12); border: 1px solid rgba(37,211,102,0.35); color: #25D366; font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
     .btn-qr:hover { background: rgba(37,211,102,0.2); }
     .qr-error { margin: 10px 0 0; font-size: 12px; color: #f87171; background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.2); border-radius: 8px; padding: 8px 12px; }
+    .manual-qr-details { margin-top: 12px; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; overflow: hidden; text-align: left; }
+    .manual-qr-summary { padding: 10px 14px; font-size: 12px; color: #c9a96e; cursor: pointer; background: rgba(201,169,110,0.05); list-style: none; }
+    .manual-qr-summary::-webkit-details-marker { display: none; }
+    .manual-qr-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+    .manual-qr-hint { margin: 0; font-size: 12px; color: #9997b0; }
+    .manual-qr-hint code { background: rgba(0,0,0,0.3); padding: 1px 5px; border-radius: 4px; color: #c9a96e; }
+    .qr-paste-input {
+      width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 11px;
+      background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+      color: #f0eff4; resize: vertical; font-family: monospace;
+    }
+    .qr-paste-input:focus { outline: none; border-color: rgba(37,211,102,0.4); }
     .btn-refresh { margin-top: 0; padding: 8px 18px; font-size: 12px; }
     .connected-banner { padding: 14px 18px; border-radius: 12px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.25); color: #4ade80; font-size: 14px; font-weight: 600; text-align: center; }
 
@@ -320,6 +345,14 @@ export class WhatsAppSettingsComponent implements OnInit {
     } finally {
       this.testing.set(false);
     }
+  }
+
+  onQrPaste(event: Event): void {
+    const val = (event.target as HTMLTextAreaElement).value.trim();
+    if (!val) return;
+    const src = val.startsWith('data:') ? val : `data:image/png;base64,${val}`;
+    this.qrCode.set(src);
+    this.qrError.set(null);
   }
 
   async loadQr(): Promise<void> {
