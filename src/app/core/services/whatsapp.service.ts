@@ -15,7 +15,7 @@ export class WhatsAppService {
 
   private get config(): WaConfig {
     return {
-      baseUrl: localStorage.getItem('openwa_url') ?? 'http://localhost:3000',
+      baseUrl: '/openwa-api',
       sessionId: localStorage.getItem('openwa_session') ?? 'peluqueria',
       apiKey: localStorage.getItem('openwa_api_key') ?? '',
     };
