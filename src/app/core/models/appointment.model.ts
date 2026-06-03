@@ -9,10 +9,8 @@ export interface Appointment {
   id: string;
   userId: string;
   userName: string;
-  clientPhone?: string;
   barberId: string;
   barberName: string;
-  barberPhone?: string;
   serviceId: string;
   serviceName: string;
   date: string;
@@ -21,6 +19,4 @@ export interface Appointment {
   notes?: string;
   createdAt: string;
   price: number;
-  reminderSent24h?: boolean;
-  reminderSent1h?: boolean;
 }

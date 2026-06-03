@@ -1,22 +1,8 @@
 services:
   openwa:
-    build:
-      context: .
-      dockerfile: openwa.Dockerfile
-    volumes:
-      - openwa_sessions:/app/.wwebjs_auth
-      - openwa_data:/app/data
-      - /dev/shm:/dev/shm
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=sqlite:./data/openwa.db
-      - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage,--disable-gpu,--no-first-run,--no-zygote
-    shm_size: '256mb'
-    restart: unless-stopped
+    image: node:22-alpine
+    command: echo "OpenWA removed"
+    profiles:
+      - disabled
 
-volumes:
-  openwa_sessions:
-  openwa_data:
+volumes: {}

@@ -763,10 +763,8 @@ export class AppointmentsComponent {
     const appt = this.apptService.create({
       userId: user.id,
       userName: user.name,
-      clientPhone: this.clientPhone || undefined,
       barberId: barber.id,
       barberName: barber.name,
-      barberPhone: barber.phone || undefined,
       serviceId: service.id,
       serviceName: service.name,
       date: this.selectedDate(),

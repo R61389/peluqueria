@@ -10,14 +10,5 @@
     "headers": {
       "Connection": "keep-alive"
     }
-  },
-  "/openwa-api": {
-    "target": "http://localhost:3000",
-    "secure": false,
-    "changeOrigin": true,
-    "pathRewrite": {
-      "^/openwa-api": ""
-    },
-    "logLevel": "warn"
   }
 }
