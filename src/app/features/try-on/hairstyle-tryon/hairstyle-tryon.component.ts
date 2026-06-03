@@ -107,7 +107,7 @@ const HAIR_COLORS: HairColor[] = [
           <div class="dot-spinner">
             <span></span><span></span><span></span>
           </div>
-          Detectando rostro y analizando características…
+          Analizando tu foto…
         </div>
       }
 
@@ -306,6 +306,13 @@ localStorage.setItem('hf_api_key', 'hf_TU_CLAVE')</code>
                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             Descargar
+          </button>
+          <button class="btn-report" (click)="exportReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Exportar reporte
           </button>
           <button class="btn-ghost" (click)="aiService.reset(); generate()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
@@ -551,13 +558,34 @@ localStorage.setItem('hf_api_key', 'hf_TU_CLAVE')</code>
       color:#c9a96e; font-size:13px; font-weight:600; cursor:pointer;
     }
     .btn-download:hover { background:rgba(201,169,110,0.2); }
+    .btn-report {
+      display:flex; align-items:center; gap:6px;
+      padding:8px 16px; border-radius:8px;
+      background:rgba(74,222,128,0.08); border:1px solid rgba(74,222,128,0.25);
+      color:#4ade80; font-size:13px; font-weight:600; cursor:pointer;
+    }
+    .btn-report:hover { background:rgba(74,222,128,0.15); }
+    .result-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .result-meta { display:flex; justify-content:space-between; font-size:11px; color:#6b6980; }
 
-    @media (max-width:500px) {
-      .ai-tryon { padding:0 12px 40px; }
+    @media (max-width:640px) {
+      .ai-tryon { padding:0 14px 40px; gap:14px; }
       .step-card { flex-direction:column; gap:10px; padding:14px; }
-      .style-grid { grid-template-columns:repeat(3,1fr); max-height:260px; }
+      .style-grid { grid-template-columns:repeat(3,1fr); max-height:280px; }
       .filter-row { gap:6px; }
+      .color-row { gap:6px; }
+      .result-header { flex-direction:column; align-items:flex-start; gap:10px; }
+      .result-actions { width:100%; }
+      .btn-download, .btn-report { flex:1; justify-content:center; }
+      .btn-ghost { flex:1; justify-content:center; }
+    }
+
+    @media (max-width:400px) {
+      .ai-tryon { padding:0 10px 32px; }
+      .step-num { display:none; }
+      .style-grid { grid-template-columns:repeat(2,1fr); }
+      .swatch { width:26px; height:26px; }
+      .hero-sub { font-size:12px; }
     }
   `],
 })
@@ -715,7 +743,7 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
       if (result.gender === 'female') this.genderFilter.set('female');
     } catch (err) {
       this.analysisError.set(
-        'No se detectó rostro. Usa una foto frontal, bien iluminada, con el rostro centrado.',
+        'No pudimos identificar el rostro. Prueba con una foto de frente, con buena iluminación y sin lentes de sol.',
       );
     } finally {
       this.analyzing.set(false);
@@ -792,6 +820,96 @@ export class HairstyleTryonComponent implements AfterViewInit, OnDestroy {
     link.download = `barber-ai-${this.selectedStyle()?.id ?? 'tryon'}.jpg`;
     link.href = result.generatedImage;
     link.click();
+  }
+
+  async exportReport(): Promise<void> {
+    const result = this.aiService.result();
+    const style  = this.selectedStyle();
+    const color  = this.selectedColor();
+    const shape  = this.analysisResult();
+    if (!result || !style) return;
+
+    const beforeB64 = await this.toBase64(this.photoUrl()!).catch(() => '');
+    const afterSrc  = result.generatedImage;
+
+    const shapeMap: Record<string, string> = {
+      oval: 'Ovalado', round: 'Redondo', square: 'Cuadrado',
+      rectangular: 'Rectangular', heart: 'Corazón', triangular: 'Triangular',
+    };
+    const shapeLabel = shape ? (shapeMap[shape.faceShape] ?? shape.faceShape) : '—';
+    const date = new Date().toLocaleDateString('es', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    const html = `<!DOCTYPE html><html lang="es"><head>
+<meta charset="UTF-8"><title>Reporte BarberAI</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a2e;padding:32px;max-width:900px;margin:auto}
+  .header{display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #c9a96e;padding-bottom:16px;margin-bottom:24px}
+  .brand{font-size:22px;font-weight:800;color:#1a1a2e;letter-spacing:.02em}
+  .brand span{color:#c9a96e}
+  .date{font-size:12px;color:#666}
+  .title{font-size:18px;font-weight:700;margin-bottom:20px;color:#1a1a2e}
+  .images{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+  .img-box{display:flex;flex-direction:column;gap:6px}
+  .img-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#666}
+  .img-box img{width:100%;border-radius:10px;border:1px solid #e5e5e5;aspect-ratio:3/4;object-fit:cover}
+  .specs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+  .spec-item{padding:12px 16px;border-radius:8px;background:#f8f6f0;border:1px solid #e8dfc8}
+  .spec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8a7a5a;margin-bottom:4px}
+  .spec-value{font-size:15px;font-weight:700;color:#1a1a2e}
+  .desc-box{padding:16px;border-radius:8px;background:#fafafa;border:1px solid #eee;margin-bottom:24px}
+  .desc-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:8px}
+  .desc-text{font-size:12px;color:#444;line-height:1.6}
+  .footer{text-align:center;font-size:11px;color:#aaa;border-top:1px solid #eee;padding-top:16px}
+  .color-dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1.5px solid #ccc;vertical-align:middle;margin-right:5px}
+  @media print{body{padding:16px}button{display:none}}
+</style>
+</head><body>
+<div class="header">
+  <div class="brand">Barber<span>AI</span></div>
+  <div class="date">${date}</div>
+</div>
+<div class="title">Reporte de peinado personalizado</div>
+<div class="images">
+  <div class="img-box">
+    <div class="img-label">Foto original</div>
+    ${beforeB64 ? `<img src="${beforeB64}" alt="Antes"/>` : '<div style="height:260px;background:#f0f0f0;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#aaa">No disponible</div>'}
+  </div>
+  <div class="img-box">
+    <div class="img-label">Resultado con IA</div>
+    <img src="${afterSrc}" crossorigin="anonymous" alt="Después"/>
+  </div>
+</div>
+<div class="specs">
+  <div class="spec-item">
+    <div class="spec-label">Corte seleccionado</div>
+    <div class="spec-value">${style.labelEs}</div>
+  </div>
+  <div class="spec-item">
+    <div class="spec-label">Forma de rostro</div>
+    <div class="spec-value">${shapeLabel}</div>
+  </div>
+  <div class="spec-item">
+    <div class="spec-label">Color de cabello</div>
+    <div class="spec-value">
+      <span class="color-dot" style="background:${color.hex}"></span>${color.nameEs}
+    </div>
+  </div>
+  <div class="spec-item">
+    <div class="spec-label">Categoría</div>
+    <div class="spec-value">${style.category}</div>
+  </div>
+</div>
+<div class="desc-box">
+  <div class="desc-label">Descripción técnica del corte</div>
+  <div class="desc-text">${style.promptKeywords?.replace(/NOT[^.]+\./g, '').trim() ?? style.labelEs}</div>
+</div>
+<div class="footer">Generado por BarberAI &nbsp;·&nbsp; ${date}</div>
+<script>window.onload=()=>window.print()<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(html); win.document.close(); }
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
